@@ -6,22 +6,24 @@ import serial
 
 class PyKhepera():
     """this represents a khepera robot."""
+
+    #Constants
+    _gets = ['N', 'H']
+
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=1):
         self.timeout = timeout
         self.port = port
         self.baud = baud
         self.newlines = ['\r', '\n']
         self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
+
         self.purge_buffer()
 
     def purge_buffer(self):
         response = self.ser.readline()
         while response:
             print response
-
-    def print_response(self):
-        response = self.ser.readline()
-        print response
+            response = self.ser.readline()
 
     def read_array(self):
         pass
@@ -32,18 +34,22 @@ class PyKhepera():
 
     def set_speed(self, speed):
         self.ser.write('D,%d,%d\n' % (speed, speed))
-        self.print_response()
+        self.purge_buffer()
 
     def stop(self):
-        self.ser.write('D,0,0\n')
-        self.print_response()
+        self.set_speed(0)
 
     def turn(self, left, right):
         self.ser.write('D,%d,%d\n' % (left, right))
-        self.print_response()
+        self.purge_buffer()
 
     def get_values(self, command):
         command = command.upper()
+
+        if command not in PyKhepera._gets:
+            print 'not a valid command'
+            return
+
         self.ser.write('%s\n' % (command))
         sensor_string = self.ser.readline()
         vals = sensor_string.split(',')
@@ -58,6 +64,6 @@ class PyKhepera():
 
     def set_counts(self, left, right):
         self.ser.write('G,%d,%d\n' % (left, right))
-        self.print_response()
+        self.purge_buffer()
 
 

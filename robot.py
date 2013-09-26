@@ -3,11 +3,11 @@ high level functions such as reloading the robot, controlling the robot,
 etc.
 '''
 import serial
-from pykhepera import PyKhepera
+import pykhepera
 
 
-def load_robot():
+def load():
 	reload(pykhepera)
-	r = PyKhepera()
+	r = pykhepera.PyKhepera()
 	return r
 
