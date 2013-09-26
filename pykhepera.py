@@ -4,7 +4,7 @@ with the khepera robot
 
 import serial
 
-class Robot():
+class PyKhepera():
     """this represents a khepera robot."""
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=1):
         self.timeout = timeout
@@ -12,16 +12,23 @@ class Robot():
         self.baud = baud
         self.newlines = ['\r', '\n']
         self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
+        self.purge_buffer()
+
+    def purge_buffer(self):
+        response = self.ser.readline()
+        while response:
+            print response
 
     def print_response(self):
-        response = self.ser.read()
+        response = self.ser.readline()
         print response
 
     def read_array(self):
         pass
 
     def kill(self):
-        self.s.close()
+        self.ser.close()
+        print 'serial comm stopped'
 
     def set_speed(self, speed):
         self.ser.write('D,%d,%d\n' % (speed, speed))
