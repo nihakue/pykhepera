@@ -15,7 +15,7 @@ class PyKhepera():
         'G': ['pos_left', 'pos_right']
     }
 
-    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=1):
+    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.5):
         self.timeout = timeout
         self.port = port
         self.baud = baud
@@ -50,21 +50,26 @@ class PyKhepera():
 
     def get_values(self, command):
         command = command.upper()
+        self.purge_buffer()
 
         if command not in PyKhepera._get_commands:
             print 'not a valid command'
             return
 
-        self.ser.write('%s\n' % (command))
+        self.ser.write('%s\n' % (command)) #Send the command
+
         sensor_string = self.ser.readline()
         vals = sensor_string.split(',')
+
         return_vals = []
         for val in vals:
             for token in self.newlines:
                 val = val.replace(token,'')
             if val == command.lower():
                 continue
-            return_vals.append(val)
+            return_vals.append(int(val))
+        if len(return_vals) == 0:
+            raise IndexError("return vals is empty")
         return return_vals
 
     def set_values(self, command, args):
