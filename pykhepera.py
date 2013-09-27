@@ -8,7 +8,10 @@ class PyKhepera():
     """this represents a khepera robot."""
 
     #Constants
-    _gets = ['N', 'H']
+    _get_commands = ['N', 'H']
+    _set_commands = {
+        'C': ['pos_left', 'pos_right']
+    }
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=1):
         self.timeout = timeout
@@ -46,7 +49,7 @@ class PyKhepera():
     def get_values(self, command):
         command = command.upper()
 
-        if command not in PyKhepera._gets:
+        if command not in PyKhepera._get_commands:
             print 'not a valid command'
             return
 
@@ -61,6 +64,22 @@ class PyKhepera():
                 continue
             return_vals.append(val)
         return return_vals
+
+    def set_values(self, command, args):
+        command = command.upper()
+        if command not in PyKhepera._set_commands:
+            print 'invalid command'
+            return
+        if len(args) != len(PyKhepera._set_commands[command]):
+            print 'invalid arguments.\
+            was expecting the form: %s' % PyKhepera._set_commands[command]
+            return
+        arg_string = ','.join(str(x) for x in args)
+        print 'sending: %s,%s\n' % (command, arg_string)
+        self.ser.write('%s,%s\n' % (command, arg_string))
+        self.purge_buffer()
+
+
 
     def set_counts(self, left, right):
         self.ser.write('G,%d,%d\n' % (left, right))
