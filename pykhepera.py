@@ -9,8 +9,10 @@ class PyKhepera():
 
     #Constants
     _get_commands = ['N', 'H']
+
     _set_commands = {
-        'C': ['pos_left', 'pos_right']
+        'C': ['pos_left', 'pos_right'],
+        'G': ['pos_left', 'pos_right']
     }
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=1):
