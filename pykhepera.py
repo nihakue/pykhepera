@@ -22,6 +22,8 @@ class PyKhepera():
         self.newlines = ['\r', '\n']
         self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
 
+        self.state = 0
+
         self.purge_buffer()
 
     def purge_buffer(self):
@@ -45,6 +47,7 @@ class PyKhepera():
         self.set_speed(0)
 
     def turn(self, left, right):
+        print 'setting speed to: %s %s' % (left, right)
         self.ser.write('D,%d,%d\n' % (left, right))
         self.purge_buffer()
 
