@@ -23,9 +23,9 @@ def load():
 
 def start(r):
 	try:
-		max_ir_reading = 136 # This represents the min distance
+		max_ir_reading = 130 # This represents the min distance
 		wall_max = 176
-		wall_min = 132
+		wall_min = 145
 		prev_l = 5
 		prev_r = 5
 		r.turn(prev_l,prev_r)
@@ -51,12 +51,11 @@ def start(r):
 				avg_r = []
 				close = False
 
-				for val in vals[2:3]:
-					if val > max_ir_reading:
+				for val in range(2,4):
+					if vals[val] > max_ir_reading:
 						close = True
 
 				if close:
-
 					if(vals[1] > max_ir_reading/1.5):
 						vr -= 4
 					if(vals[2] > max_ir_reading):
