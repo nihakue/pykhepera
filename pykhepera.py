@@ -16,7 +16,7 @@ class PyKhepera():
         'L': ['led_num', 'state']
     }
 
-    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.5):
+    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.1):
         self.timeout = timeout
         self.port = port
         self.baud = baud
