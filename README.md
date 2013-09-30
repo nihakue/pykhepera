@@ -23,4 +23,5 @@ valid commands:
 +N: Proximity readings
 +H: Counter Positions
 +A: Read A/D value
++O: Ambient Light
 

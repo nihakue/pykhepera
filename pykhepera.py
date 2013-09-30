@@ -8,11 +8,12 @@ class PyKhepera():
     """this represents a khepera robot."""
 
     #Constants
-    _get_commands = ['N', 'H']
+    _get_commands = ['N', 'H', 'O']
 
     _set_commands = {
         'C': ['pos_left', 'pos_right'],
-        'G': ['pos_left', 'pos_right']
+        'G': ['pos_left', 'pos_right'],
+        'L': ['led_num', 'state']
     }
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.5):
@@ -26,10 +27,11 @@ class PyKhepera():
 
         self.purge_buffer()
 
-    def purge_buffer(self):
+    def purge_buffer(self, verbose=False):
         response = self.ser.readline()
         while response:
-            print response
+            if verbose:
+                print response
             response = self.ser.readline()
 
     def read_array(self):
@@ -75,7 +77,7 @@ class PyKhepera():
             raise IndexError("return vals is empty")
         return return_vals
 
-    def set_values(self, command, args):
+    def set_values(self, command, args, verbose=False):
         command = command.upper()
         if command not in PyKhepera._set_commands:
             print 'invalid command'
@@ -85,11 +87,14 @@ class PyKhepera():
             was expecting the form: %s' % PyKhepera._set_commands[command]
             return
         arg_string = ','.join(str(x) for x in args)
-        print 'sending: %s,%s\n' % (command, arg_string)
+        if verbose:
+            print 'sending: %s,%s\n' % (command, arg_string)
+
         self.ser.write('%s,%s\n' % (command, arg_string))
         self.purge_buffer()
 
-
+    def led(self, led_num, state):
+        self.set_values('L', [led_num, state])
 
     def set_counts(self, left, right):
         self.ser.write('G,%d,%d\n' % (left, right))
