@@ -23,9 +23,9 @@ def load():
 
 def start(r):
 	try:
-		max_ir_reading = 130 # This represents the min distance
-		wall_max = 176
-		wall_min = 145
+		max_ir_reading = 120 # This represents the min distance
+		wall_max = 250
+		wall_min = 75
 		prev_l = 5
 		prev_r = 5
 		r.turn(prev_l,prev_r)
@@ -51,8 +51,8 @@ def start(r):
 				avg_r = []
 				close = False
 
-				for val in range(2,4):
-					if vals[val] > max_ir_reading:
+				for val in vals[1:5]:
+					if val > max_ir_reading:
 						close = True
 
 				if close:
@@ -131,25 +131,25 @@ def start(r):
 				avg_l.append(dl)
 				avg_r.append(dr)
 
-				dl_avg = dl
-				dr_avg = dr
+				# dl_avg = dl
+				# dr_avg = dr
 
-				# if len(avg_l) == 3:
-				# 	total = 0
-				# 	for val in avg_l:
-				# 		total += val
-				# 	dl_avg = total/3
-				# 	total = 0
-				# 	for val in avg_r:
-				# 		total += val
-				# 	dr_avg = total/3
-				# 	print 'list left: ', avg_l
-				# 	avg_l.pop(0) # shift the lists left to make room
-				# 	avg_r.pop(0)
+				if len(avg_l) == 3:
+					total = 0
+					for val in avg_l:
+						total += val
+					dl_avg = total/3
+					total = 0
+					for val in avg_r:
+						total += val
+					dr_avg = total/3
+					print 'list left: ', avg_l
+					avg_l.pop(0) # shift the lists left to make room
+					avg_r.pop(0)
 
-				# else:
-				# 	dl_avg = dl
-				# 	dr_avg = dr
+				else:
+					dl_avg = dl
+					dr_avg = dr
 
 					# print 'average dl: %d average dr: %d' % (dl_avg, dr_avg)
 
@@ -169,7 +169,7 @@ def start(r):
 					print 'at least this far'
 					print dl_avg
 					if dl_avg > 0: #Moving further away (right)
-						print 'further from left'
+						print 'turning left'
 						vl -= 3
 					elif dl_avg < 0:#Moving closer (left)
 						print 'closer to left'
