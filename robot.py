@@ -1,14 +1,10 @@
-'''This is the container module for the pykhepera code. It handles 
+'''This is the logic/execution module for the pykhepera robot. It handles the
 high level functions such as reloading the robot, controlling the robot,
 etc.
 '''
+
 import serial
 import pykhepera
-import time
-import math
-
-import signal, sys
-
 
 
 def restart():
@@ -42,20 +38,20 @@ def start(r):
 			vals = r.get_values('n')
 			print 'IR readings: %s' % vals
 			
-
 			if r.state is 0:
 				r.led(1, 0)
 				r.led(0, 1)
-				#Reset values
+
+				#Reset averages: this effectively disables the running average
 				avg_l = []
 				avg_r = []
 				close = False
 
-				for val in vals[1:5]:
+				for val in vals[1:5]: #Am I close on the front sensors?
 					if val > max_ir_reading:
 						close = True
 
-				if close:
+				if close: #Close to an object, create a delta command for left and right
 					if(vals[1] > max_ir_reading/1.5):
 						vr -= 4
 					if(vals[2] > max_ir_reading):
@@ -66,63 +62,26 @@ def start(r):
 						vl -= 4
 					if((vl == vr) and vl != 5): #May never enter this block
 						vl = -vl
-
-				if (vl, vr) != (prev_l, prev_r):
+				#Avoid sending the same command over and over
+				if (vl, vr) != (prev_l, prev_r): 
 					if vl == 5 and vr == 5:
 						r.state = 2
 						vl = 0
 						vr = 0
-
-					r.turn(vl,vr)
+					#Execute the turn command with the delta fused delta variables
+					r.turn(vl,vr) 
 
 			elif r.state is 1: #Align to the wall
 				vl = 0
 				vr = 0
 				r.turn(0,0)
-				acceptable_error = 10
-				# print 'target val: %.5f' % target_val
-
-				lv = float(vals[1])/float(vals[0])
-				rv = float(vals[5])/float(vals[4])
-
-				# print 'left value: %.2f right value: %.2f' % (lv, rv)
-
-				l_error = math.fabs(lv - target_val)
-				r_error = math.fabs(rv - target_val)
-
-				# print l_error, r_error
-
-				# if vals[0] > vals[5]: #closer to the right wall
-				# 	if l_error > acceptable_error:
-				# 		if vals[0] < vals[1]/(2**(1/2)):
-				# 			vr -= 2
-				# 			vl += 2
-				# 		else:
-				# 			vl -= 2
-				# 			vr += 2
-				# 	else:
-				# 		r.state = 2
-				# 		break
-				# else: #closer to the left wall
-				# 	if r_error > acceptable_error:
-				# 		if vals[5] < vals[4]/(2**(1/2)):
-				# 			vl -= 2
-				# 			vr += 2
-				# 		else:
-				# 			vr -= 2
-				# 			vr += 2
-				# 	else:
-				# 		r.state = 2
-				# 		break
-
-				# r.turn(vl, vr)
-
 
 			elif r.state is 2: #Follow the wall
 				r.led(0, 1)
 				r.led(1, 1)
 				prev_vals = r.get_values('n')
 
+				#calculate the change relative to the wall since last step
 				dl = vals[0] - prev_vals[0]
 				dr = vals[5] - prev_vals[5]
 				dl_avg = 0
@@ -131,9 +90,7 @@ def start(r):
 				avg_l.append(dl)
 				avg_r.append(dr)
 
-				# dl_avg = dl
-				# dr_avg = dr
-
+				#Calculate the average of the last three distance changes
 				if len(avg_l) == 3:
 					total = 0
 					for val in avg_l:
@@ -151,36 +108,31 @@ def start(r):
 					dl_avg = dl
 					dr_avg = dr
 
-					# print 'average dl: %d average dr: %d' % (dl_avg, dr_avg)
-
-
 				if (vals[2] > max_ir_reading) or (vals[3] > max_ir_reading):
 					r.state = 0
 					print "wall in front"
 					continue
 
 				'''dl and dr represent the change in 'distance' 
-				(in terms of an ir raeding) between the robot
+				(in terms of an ir reading) between the robot
 				and the wall.
-				positive: further away
-				negative: closer
+				positive: I've moved further away
+				negative: I've moved closer closer
 				'''
 				if vals[0] > vals[5]: #Wall on the left side
-					print 'at least this far'
-					print dl_avg
 					if dl_avg > 0: #Moving further away (right)
 						print 'turning left'
 						vl -= 3
 					elif dl_avg < 0:#Moving closer (left)
-						print 'closer to left'
+						print 'turning right'
 						vr -= 3
 
 				elif vals[5] > vals[0]: #Wall on the ride side
 					if dr_avg > 0:
-						print 'further from right'
+						print 'turning right'
 						vr -= 3
 					elif dr_avg < 0:
-						print 'closer to right'
+						print 'turning left'
 						vl -= 3
 
 				if vals[0] < wall_min and vals[5] < wall_min:
@@ -188,15 +140,14 @@ def start(r):
 					print "too far from wall"
 					vl = 5
 					vr = 5
-				
 
 				r.turn(vl, vr)
 
-			prev_l = vl
-			prev_r = vr
-			prev_vals = vals
+				prev_l = vl
+				prev_r = vr
+				prev_vals = vals
 
-
+	#Allow us to interrupt cleanly with ctrl-C
 	except KeyboardInterrupt:
 		print 'killing and cleaning up'
 		r.purge_buffer()

@@ -1,7 +1,6 @@
 '''This is a tiny helper module containing wrapper functions for working 
 with the khepera robot
 '''
-
 import serial
 
 class PyKhepera():
@@ -99,5 +98,3 @@ class PyKhepera():
     def set_counts(self, left, right):
         self.ser.write('G,%d,%d\n' % (left, right))
         self.purge_buffer()
-
-
