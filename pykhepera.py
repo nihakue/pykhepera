@@ -1,4 +1,4 @@
-'''This is a tiny helper module containing wrapper functions for working 
+'''This is a helper module containing wrapper functions for working 
 with the khepera robot
 '''
 import serial
