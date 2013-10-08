@@ -16,6 +16,18 @@ def load():
     r = pykhepera.PyKhepera()
     return r
 
+def calibrate_min(r):
+    mins = r.get_values('n')
+    r.set_values('g', [0, -0])
+    r.turn(5,-5)
+    while r.get_values('h')[0] <  2000:
+        aux = r.get_values('n')
+        for i, val in enumerate(aux):
+            if val > mins[i]:
+                mins[i] = val
+    print mins
+    r.turn(0,0)
+
 
 def start(r):
     try:
