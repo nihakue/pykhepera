@@ -1,10 +1,10 @@
-'''This is a helper module containing wrapper functions for working 
-with the khepera robot
-'''
 import serial
+from serialterm import Termi
 
 class PyKhepera():
-    """this represents a khepera robot."""
+    """An interface for serial communication with a khepera robot.
+    Contains wrapper functions for turning, sending commands, and cleaning
+    out the serial buffer."""
 
     #Constants
     _get_commands = ['N', 'H', 'O']
@@ -15,29 +15,27 @@ class PyKhepera():
         'L': ['led_num', 'state']
     }
 
-    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.05):
-        self.timeout = timeout
+    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=0):
         self.port = port
         self.baud = baud
+        self.timeout = timeout
         self.newlines = ['\r', '\n']
         self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
-
+        self.terminal = Termi(self.ser)
+        self.terminal.start()
         self.state = 0
 
-        self.purge_buffer()
-
     def purge_buffer(self, verbose=False):
+        pass
         response = self.ser.readline()
         while response:
             if verbose:
                 print response
             response = self.ser.readline()
 
-    def read_array(self):
-        pass
-
     def kill(self):
         self.ser.close()
+        self.terminal.terminate()
         print 'serial comm stopped'
 
     def set_speed(self, speed):
