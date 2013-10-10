@@ -5,7 +5,17 @@ etc.
 
 import serial
 import pykhepera
+import behaviors
+import time
 
+_sensor_data = {
+    'n': [],
+    'h': []
+}
+
+def read_sensor_data():
+    for key in _sensor_data:
+        _sensor_data[key] = r.get_values(key)
 
 def restart():
     r = load()
@@ -30,6 +40,17 @@ def calibrate_min(r):
 
 
 def start(r):
+    #Test code
+    obj_avoid = behaviors.ObjAvoid(_sensor_data)
+    wall_avoid = behaviors.WallFollow(_sensor_data)
+
+    while 1:
+        read_sensor_data()
+        obj_avoid.step()
+        wall_avoid.step()
+        time.sleep(1)
+
+    #end test code
     try:
         max_ir_reading = 120 # This represents the min distance
         wall_max = 250
