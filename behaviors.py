@@ -14,31 +14,28 @@ class ObjAvoid(Behavior):
         max_ir_reading = self._thresholds['max_ir_reading']
         vl = 5
         vr = 5
-        close = False
 
-        for val in vals[1:5]: #Am I close on the front sensors?
-            if val > max_ir_reading:
-                close = True
-
-        if close: #Close to an object, create a delta command for left and right
-            if(vals[1] > max_ir_reading/1.5):
-                vr -= 4
-            if(vals[2] > max_ir_reading):
-                vr -= 4
-            if(vals[3] > max_ir_reading):
-                vl -= 4
-            if(vals[4] > max_ir_reading/1.5):
-                vl -= 4
-            if((vl == vr) and vl != 5): #May never enter this block
-                vl = -vl
+        if(vals[1] > max_ir_reading/1.5):
+            vr -= 4
+        if(vals[2] > max_ir_reading):
+            vr -= 4
+        if(vals[3] > max_ir_reading):
+            vl -= 4
+        if(vals[4] > max_ir_reading/1.5):
+            vl -= 4
+        if((vl == vr) and vl != 5): #May never enter this block
+            vl = -vl
 
         return (vl,vr)
         
 class WallFollow(Behavior):
     """docstring for WallFollow"""
     def __init__(self, _sensor_data, _thresholds):
-        super(WallFollow, self).__init__(_sensor_data, _thresholds)
+        print 'here'
+        self = super(WallFollow, self).__init__(_sensor_data, _thresholds)
         self.prev_vals = self._sensor_data['n']
+        print 'previous values', self.prev_vals
+
     def step(self):
         vl = 5
         vr = 5
@@ -46,8 +43,8 @@ class WallFollow(Behavior):
         prev_vals = self.prev_vals
         max_ir_reading = self._thresholds['max_ir_reading']
         #calculate the change relative to the wall since last step
-        dl = vals[0] - prev_vals[0]
-        dr = vals[5] - prev_vals[5]
+        dl = vals[0] - self.prev_vals[0]
+        dr = vals[5] - self.prev_vals[5]
         dl_avg = 0
         dr_avg = 0
 

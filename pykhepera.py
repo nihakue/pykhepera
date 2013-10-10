@@ -14,8 +14,7 @@ class PyKhepera():
         'G': ['pos_left', 'pos_right'],
         'L': ['led_num', 'state']
     }
-
-    _speed = (,)
+    
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.05):
         self.timeout = timeout
@@ -27,6 +26,7 @@ class PyKhepera():
         self.state = 0
 
         self.purge_buffer()
+        self.speed = (0,0)
 
     def purge_buffer(self, verbose=False):
         response = self.ser.readline()
@@ -50,11 +50,11 @@ class PyKhepera():
         self.set_speed(0)
 
     def turn(self, (left, right)):
-        if left,right != _speed:
+        if (left,right) != self.speed:
             print 'setting speed to: %s %s' % (left, right)
             self.ser.write('D,%d,%d\n' % (left, right))
             self.purge_buffer()
-            _speed = left,right
+            self.speed = left,right
 
     def get_values(self, command):
         command = command.upper()

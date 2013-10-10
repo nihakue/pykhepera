@@ -46,38 +46,34 @@ def calibrate_min(r):
 
 
 def start(r):
-    #Test code
     obj_avoid = behaviors.ObjAvoid(_sensor_data, _thresholds)
-    wall_avoid = behaviors.WallFollow(_sensor_data, _thresholds)
+    wall_follow = behaviors.WallFollow(_sensor_data, _thresholds)
 
     while 1:
         read_sensor_data()
         speed = (0,0)
+        vals = _sensor_data['n']
         if r.state is 0:
+            for val in vals[1:5]: #Am I close on the front sensors?
+                if val > _thresholds['max_ir_reading']:
+                    r.state = 1
+                    break
+            speed = (5,5)
+        if r.state is 1:
             speed = obj_avoid.step()
             if speed == (5, 5):
-                r.state = 1
+                r.state = 2
                 speed = (0,0)
-        elif r.state is 1:
-            speed =wall_avoid.step()
-        turn(speed)
-
-    #TODO: Find a home for this
-
-
-    #TODO: Find a home for this:
-    if (vals[2] > max_ir_reading) or (vals[3] > max_ir_reading):
-            r.state = 0
-            print "wall in front"
-            continue
-    #TODO: Find a home for this:
-    if vals[0] < self._thresholds['wall_min'] and vals[5] < self.thresholds['wall_min']:
-            r.state = 0
-            print "too far from wall"
-            vl = 5
-            vr = 5
-
-    #end test code
+        elif r.state is 2:
+            for val in vals[2:3]: #Am I close on the front sensors?
+                if val > _thresholds['max_ir_reading']:
+                    r.state = 1
+                    continue
+            if vals[0] < _thresholds['wall_min'] and vals[5] < _thresholds['wall_min']:
+                r.state = 0
+                continue
+            speed = wall_follow.step()
+        r.turn(speed)
     
 
     # #Allow us to interrupt cleanly with ctrl-C
