@@ -33,21 +33,29 @@ def load():
     return r
 
 def calibrate_min(r):
-    mins = r.get_values('n')
+    read_sensor_data()
+    mins = _sensor_data['n']
     r.set_values('g', [0, -0])
-    r.turn(5,-5)
-    while r.get_values('h')[0] <  2000:
-        aux = r.get_values('n')
+    r.turn((5,-5))
+    while _sensor_data['h'][0] <  2000:
+        read_sensor_data()
+        aux = _sensor_data['n']
         for i, val in enumerate(aux):
             if val > mins[i]:
                 mins[i] = val
     print mins
-    r.turn(0,0)
+    r.turn((0,0))
+    m = 0
+    for val in mins:
+        m += val
+    m = m/8
+    _thresholds['max_ir_reading'] = m
 
 
 def start(r):
     obj_avoid = behaviors.ObjAvoid(_sensor_data, _thresholds)
-    wall_follow = behaviors.WallFollow(_sensor_data, _thresholds)
+    #wall_follow = behaviors.WallFollow(_sensor_data, _thresholds)
+    print _thresholds['max_ir_reading']
 
     while 1:
         read_sensor_data()
@@ -72,7 +80,7 @@ def start(r):
             if vals[0] < _thresholds['wall_min'] and vals[5] < _thresholds['wall_min']:
                 r.state = 0
                 continue
-            speed = wall_follow.step()
+            #speed = wall_follow.step()
         r.turn(speed)
     
 
