@@ -56,16 +56,14 @@ class PyKhepera():
             self.purge_buffer()
             self.speed = left,right
 
-    def read_sensor_values():
-        return get_values('N')
+    def read_sensor_values(self):
+        return self.get_values('N')
 
-    def read_wheel_values():
-        return get_values('H')
+    def read_wheel_values(self):
+        return self.get_values('H')
 
     def get_values(self, command):
         command = command.upper()
-        self.purge_buffer()
-
         if command not in PyKhepera._get_commands:
             print 'not a valid command'
             return
@@ -81,9 +79,11 @@ class PyKhepera():
                 val = val.replace(token,'')
             if val == command.lower():
                 continue
-            return_vals.append(int(val))
-        if len(return_vals) == 0:
-            raise IndexError("return vals is empty")
+            try:
+                return_vals.append(int(val))
+            except Exception, e:
+                continue
+        print 'return_vals:', return_vals
         return return_vals
 
     def set_values(self, command, args, verbose=False):

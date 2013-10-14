@@ -1,13 +1,15 @@
-from data import Data
 
 class Behavior(object):
     """Abstract class for behaivors"""
-    def __init__(self):
-        self.data = Data()
+    def __init__(self, data):
+        self.data = data
         print 'I am being initialized: ', self
         
 class ObjAvoid(Behavior):
     """Avoid objects like the plague."""
+
+    def __init__(self, data):
+        super(ObjAvoid, self).__init__(data)
 
     def step(self):
         if not self.data.sensor_values:
@@ -33,15 +35,15 @@ class ObjAvoid(Behavior):
         
 class WallFollow(Behavior):
     """try to follow a wall as closely as possible"""
-    def __init__(self):
-        super(WallFollow, self).__init__()
+    def __init__(self, data):
+        super(WallFollow, self).__init__(data)
         self.prev_vals = self.data.sensor_values
         self.avg_l = []
         self.avg_r = []
 
     def step(self):
         if not self.data.sensor_values:
-            print 'no values available'
+            print 'no values availablez'
             return
         vals = self.data.sensor_values
         max_ir_reading = self.data.thresholds['max_ir_reading']
