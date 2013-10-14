@@ -8,11 +8,24 @@ import pykhepera, behaviors
 from data import Data
 import time
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def update_data():
     data.sensor_values = r.read_sensor_values()
-    data.wheel_values = r.read_wheel_values()
-    print 'data sensor:', data.sensor_values
+    aux = r.read_wheel_values()
+    data.wheel_values.append(aux)
+    data.wheel_delta = (aux[0]-data.wheel_values[-1][0],
+        aux[1]-data.wheel_values[-1][1])
+    
+    data.x_positions.append(aux[0])
+    data.y_positions.append(aux[1])
+
+def get_new_position():
+    pass
+
+def calc_heading():
+    pass
 
 def restart():
     r = load()
@@ -20,12 +33,6 @@ def restart():
 
 def load():
     reload(pykhepera)
-    # _trajectory_x = []
-    # _trajectory_y = []
-    # _fig = plt.figure()
-    # plt.ion()
-    # _ax = _fig.add_subplot(1,1,1)
-    # _ax.axis([0, 6, 0, 20])
     r = pykhepera.PyKhepera()
     return r
 
@@ -36,6 +43,12 @@ def calibrate(r):
     while data.wheel_values[0] <  100:
         update_data()
     r.turn((0,0))
+
+def to_mm(wheel_value):
+    return float(wheel_value * 0.08)
+
+def to_wu(mm):
+    return int(mm/0.08)
 
 def calibrate_min(r):
     update_data()
@@ -54,14 +67,22 @@ def calibrate_min(r):
         m += val
     m = m/8
     data.thresholds['max_ir_reading'] = m
+    data.thresholds['wall_max'] = m
+    if m:
+        print 'calibration succesful'
+
+def update_plot():
+    line.set_xdata(data.x_positions)
+    line.set_ydata(data.y_positions)
+    fig.canvas.draw()
 
 def print_trajectory():
     _trajectory_x.append(data.wheel_values[0])
     _trajectory_y.append(data.wheel_values[1])
     #print _trajectory_x
     #print _trajectory_y
-    _ax.clear()
-    _ax.bar(_trajectory_x,_trajectory_y)
+    ax.clear()
+    ax.bar(_trajectory_x,_trajectory_y)
     plt.draw()
     plt.show()
 
@@ -87,7 +108,8 @@ def start(r):
     try:
         while 1:
             update_data()
-            # print_trajectory()
+            update_plot()
+
             speed = (0,0)
             vals = data.sensor_values
             if r.state is 0:
@@ -126,6 +148,11 @@ def start(r):
         r.led(1,0)
         r.stop()
         r.kill()
-    
+
 data = Data()
+plt.ion()
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1)
+ax.axis([-10000, 10000, -10000, 10000])
+line, = ax.plot(data.x_positions, data.y_positions)
 r = load()

@@ -5,6 +5,9 @@ class Data(object):
 
     _sensor_values = []
     _wheel_values = []
+    _wheel_delta = []
+    _x_positions = [0]
+    _y_positions = [0]
 
     _thresholds = {
     'max_ir_reading': 120, # This represents the min distance
@@ -30,7 +33,6 @@ class Data(object):
     @wheel_values.setter
     def wheel_values(self, value):
         self._wheel_values = value
-    
 
     @property
     def thresholds(self):
@@ -38,4 +40,25 @@ class Data(object):
     @thresholds.setter
     def thresholds(self, value):
         self._thresholds = value
+    
+    @property
+    def x_positions(self):
+        return self._x_positions
+    @x_positions.setter
+    def x_positions(self, value):
+        self._x_positions = value
+    
+    @property
+    def y_positions(self):
+        return self._y_positions
+    @y_positions.setter
+    def y_positions(self, value):
+        self._y_positions = value
+    
+    @property
+    def wheel_delta(self):
+        return self._wheel_delta
+    @wheel_delta.setter
+    def wheel_delta(self, value):
+        self._wheel_delta = value
     
