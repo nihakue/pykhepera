@@ -5,10 +5,7 @@ This is the python code for our Khepera robot. It's rad.
 
 ##Usage
 ---------
-Start an interactive python shell, import robot, and the create a
-robot with r = robot.load_robot()
-
-if you ever need to reload the robot, do just the same.
+Things are a bit of a mess right now. We're doing some refactoring, so there isn't a sure fired way to start things up.
 
 
 ##Commands

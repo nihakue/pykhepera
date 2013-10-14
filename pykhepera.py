@@ -56,6 +56,12 @@ class PyKhepera():
             self.purge_buffer()
             self.speed = left,right
 
+    def read_sensor_values():
+        return get_values('N')
+
+    def read_wheel_values():
+        return get_values('H')
+
     def get_values(self, command):
         command = command.upper()
         self.purge_buffer()

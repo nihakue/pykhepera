@@ -4,30 +4,22 @@ etc.
 '''
 
 import serial
-import pykhepera
-import behaviors
+import pykhepera, behaviors
+from data import Data
 import time
 import matplotlib.pyplot as plt
-
-_sensor_data = {
-    'n': [],
-    'h': []
-}
-
-_thresholds = {
-    'max_ir_reading': 120, # This represents the min distance
-    'wall_max': 250,
-    'wall_min': 75
-}
 
 _trajectory_x = []
 _trajectory_y = []
 _fig = plt.figure()
 _ax = _fig.add_subplot(1,1,1)
 
-def read_sensor_data():
-    for key in _sensor_data:
-        _sensor_data[key] = r.get_values(key)
+data = Data()
+r = load()
+
+def update_data():
+    data.sensor_values = r.read_sensor_values()
+    data.wheel_values = r.read_wheel_values()
 
 def restart():
     r = load()
@@ -45,36 +37,34 @@ def load():
     return r
 
 def calibrate(r):
-    read_sensor_data()
+    update_data()
     r.set_values('g', [0, -0])
     r.turn((5,5))
-    while _sensor_data['h'][0] <  100:
-        read_sensor_data()
+    while data.wheel_values[0] <  100:
+        update_data()
     r.turn((0,0))
 
-
 def calibrate_min(r):
-    read_sensor_data()
-    mins = _sensor_data['n']
+    update_data()
+    mins = data.sensor_values
     r.set_values('g', [0, -0])
     r.turn((5,-5))
-    while _sensor_data['h'][0] <  2000:
-        read_sensor_data()
-        aux = _sensor_data['n']
+    while data.wheel_values[0] <  2000:
+        update_data()
+        aux = data.sensor_values
         for i, val in enumerate(aux):
             if val > mins[i]:
                 mins[i] = val
-    #print mins
     r.turn((0,0))
     m = 0
     for val in mins:
         m += val
     m = m/8
-    _thresholds['max_ir_reading'] = m
+    data.thresholds['max_ir_reading'] = m
 
 def print_trajectory():
-    _trajectory_x.append(_sensor_data['h'][0])
-    _trajectory_y.append(_sensor_data['h'][1])
+    _trajectory_x.append(data.sensor_values[0])
+    _trajectory_y.append(data.sensor_values[1])
     #print _trajectory_x
     #print _trajectory_y
     _ax.clear()
@@ -82,22 +72,20 @@ def print_trajectory():
     plt.draw()
     plt.show()
 
-
-
 def start(r):
-    obj_avoid = behaviors.ObjAvoid(_sensor_data, _thresholds)
-    wall_follow = behaviors.WallFollow(_sensor_data, _thresholds)
+    obj_avoid = behaviors.ObjAvoid()
+    wall_follow = behaviors.WallFollow()
 
-    #print _thresholds['max_ir_reading']
+    #print data.thresholds['max_ir_reading']
 
     while 1:
-        read_sensor_data()
+        update_data()
         print_trajectory()
         speed = (0,0)
-        vals = _sensor_data['n']
+        vals = data.sensor_values
         if r.state is 0:
             for val in vals[1:5]: #Am I close on the front sensors?
-                if val > _thresholds['max_ir_reading']:
+                if val > data.thresholds['max_ir_reading']:
                     r.state = 1
                     break
             speed = (5,5)
@@ -105,15 +93,15 @@ def start(r):
             speed = obj_avoid.step()
             if speed == (5, 5):
                 r.state = 2
-                wall_follow._prev_vals = vals
+                wall_follow.prev_vals = vals
                 speed = (0,0)
         elif r.state is 2:
             for val in vals[2:3]: #Am I close on the front sensors?
-                if val > _thresholds['max_ir_reading']:
+                if val > data.thresholds['max_ir_reading']:
                     #print "WALL!"
                     r.state = 1
                     continue
-            if vals[0] < _thresholds['wall_min'] and vals[5] < _thresholds['wall_min']:
+            if vals[0] < data.thresholds['wall_min'] and vals[5] < data.thresholds['wall_min']:
                 #print "No wall :( "
                 r.state = 0
                 continue
@@ -130,5 +118,3 @@ def start(r):
     #     r.led(1,0)
     #     r.stop()
     #     r.kill()
-
-r = load()

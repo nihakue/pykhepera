@@ -1,17 +1,17 @@
+from data import Data
+
 class Behavior(object):
     """Abstract class for behaivors"""
-    def __init__(self, _sensor_data, _thresholds):
-        self._sensor_data = _sensor_data
-        self._thresholds = _thresholds
-        print 'I am being initialed: ', self
+    def __init__(self):
+        self.data = Data()
+        print 'I am being initialized: ', self
         
 class ObjAvoid(Behavior):
     """docstring for ObjAvoid"""
-    def __init__(self, _sensor_data, _thresholds):
-        super(ObjAvoid, self).__init__(_sensor_data, _thresholds)
+
     def step(self):
-        vals = self._sensor_data['n']
-        max_ir_reading = self._thresholds['max_ir_reading']
+        vals = self.data.sensor_values
+        max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5
         vr = 5
 
@@ -30,22 +30,20 @@ class ObjAvoid(Behavior):
         
 class WallFollow(Behavior):
     """docstring for WallFollow"""
-    def __init__(self, sensor_d, thresholds):
-        #print 'here'
-        super(WallFollow, self).__init__(sensor_d, thresholds)
-        self._prev_vals = sensor_d['n']
+    def __init__(self):
+        super(WallFollow, self).__init__()
+        self.prev_vals = self.data.sensor_values
         self.avg_l = []
         self.avg_r = []
-        #print 'previous values', self._prev_vals
 
     def step(self):
+        vals = self.data.sensor_values
+        max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5
         vr = 5
-        vals = self._sensor_data['n']
-        max_ir_reading = self._thresholds['max_ir_reading']
         #calculate the change relative to the wall since last step
-        dl = vals[0] - self._prev_vals[0]
-        dr = vals[5] - self._prev_vals[5]
+        dl = vals[0] - self.prev_vals[0]
+        dr = vals[5] - self.prev_vals[5]
         dl_avg = 0
         dr_avg = 0
 
@@ -91,7 +89,7 @@ class WallFollow(Behavior):
                 #print 'turning left'
                 vl -= 3
 
-        self._prev_vals = vals
+        self.prev_vals = vals
         
         return vl, vr
         
