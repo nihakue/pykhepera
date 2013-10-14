@@ -1,3 +1,4 @@
+import numpy as np
 
 class Data(object):
     """Data model for sensor values, wheel and position 
@@ -8,6 +9,8 @@ class Data(object):
     _wheel_delta = []
     _x_positions = [0]
     _y_positions = [0]
+    _wheel_speeds = [0, 0]
+    _theta = np.pi/2
 
     _thresholds = {
     'max_ir_reading': 120, # This represents the min distance
@@ -61,4 +64,20 @@ class Data(object):
     @wheel_delta.setter
     def wheel_delta(self, value):
         self._wheel_delta = value
+
+    @property
+    def wheel_speeds(self):
+        return self._wheel_speeds
+    @wheel_speeds.setter
+    def wheel_speeds(self, value):
+        self._wheel_speeds = value
+
+    @property
+    def theta(self):
+        return self._theta
+    @theta.setter
+    def theta(self, value):
+        self._theta = value
+    
+    
     

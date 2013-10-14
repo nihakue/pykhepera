@@ -7,7 +7,7 @@ class PyKhepera():
     """this represents a khepera robot."""
 
     #Constants
-    _get_commands = ['N', 'H', 'O']
+    _get_commands = ['N', 'H', 'O', 'E']
 
     _set_commands = {
         'C': ['pos_left', 'pos_right'],
@@ -51,7 +51,7 @@ class PyKhepera():
 
     def turn(self, (left, right)):
         if (left,right) != self.speed:
-            print 'setting speed to: %s %s' % (left, right)
+            # print 'setting speed to: %s %s' % (left, right)
             self.ser.write('D,%d,%d\n' % (left, right))
             self.purge_buffer()
             self.speed = left,right
@@ -61,6 +61,12 @@ class PyKhepera():
 
     def read_wheel_values(self):
         return self.get_values('H')
+
+    def reset_wheel_counters(self):
+        self.set_values('g', [0, 0])
+
+    def read_wheel_speeds(self):
+        return self.get_values('E')
 
     def get_values(self, command):
         command = command.upper()
@@ -83,7 +89,6 @@ class PyKhepera():
                 return_vals.append(int(val))
             except Exception, e:
                 continue
-        print 'return_vals:', return_vals
         return return_vals
 
     def set_values(self, command, args, verbose=False):
