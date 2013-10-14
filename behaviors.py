@@ -7,9 +7,12 @@ class Behavior(object):
         print 'I am being initialized: ', self
         
 class ObjAvoid(Behavior):
-    """docstring for ObjAvoid"""
+    """Avoid objects like the plague."""
 
     def step(self):
+        if not self.data.sensor_values:
+            print 'no values available'
+            return
         vals = self.data.sensor_values
         max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5
@@ -29,7 +32,7 @@ class ObjAvoid(Behavior):
         return (vl,vr)
         
 class WallFollow(Behavior):
-    """docstring for WallFollow"""
+    """try to follow a wall as closely as possible"""
     def __init__(self):
         super(WallFollow, self).__init__()
         self.prev_vals = self.data.sensor_values
@@ -37,6 +40,9 @@ class WallFollow(Behavior):
         self.avg_r = []
 
     def step(self):
+        if not self.data.sensor_values:
+            print 'no values available'
+            return
         vals = self.data.sensor_values
         max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5

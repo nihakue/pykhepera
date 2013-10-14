@@ -63,8 +63,8 @@ def calibrate_min(r):
     data.thresholds['max_ir_reading'] = m
 
 def print_trajectory():
-    _trajectory_x.append(data.sensor_values[0])
-    _trajectory_y.append(data.sensor_values[1])
+    _trajectory_x.append(data.wheel_values[0])
+    _trajectory_y.append(data.wheel_values[1])
     #print _trajectory_x
     #print _trajectory_y
     _ax.clear()
