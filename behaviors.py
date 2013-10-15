@@ -1,10 +1,11 @@
+import numpy as np
 
 class Behavior(object):
     """Abstract class for behaivors"""
     def __init__(self, data):
         self.data = data
         print 'I am being initialized: ', self
-        
+
 class ObjAvoid(Behavior):
     """Avoid objects like the plague."""
 
@@ -33,7 +34,7 @@ class ObjAvoid(Behavior):
             vl = -vl
 
         return (vl,vr)
-        
+
 class WallFollow(Behavior):
     """try to follow a wall as closely as possible"""
     def __init__(self, data):
@@ -76,7 +77,7 @@ class WallFollow(Behavior):
             dl_avg = dl
             dr_avg = dr
 
-        '''dl and dr represent the change in 'distance' 
+        '''dl and dr represent the change in 'distance'
         (in terms of an ir reading) between the robot
         and the wall.
         positive: I've moved further away
@@ -99,6 +100,34 @@ class WallFollow(Behavior):
                 vl -= 3
 
         self.prev_vals = vals
-        
+
         return vl, vr
-        
+
+class GoHome(Behavior):
+    """head towards the origin at all times."""
+    def __init__(self, data):
+        super(GoHome, self).__init__(data)
+
+    def step(self):
+        theta = self.data.theta
+        home_angle = self.get_home_angle()
+        rotation = self.get_rotation(home_angle - theta)
+        return rotation
+
+    def get_home_angle(self):
+        x = self.data.x_positions[-1]
+        y = self.data.x_positions[-1]
+        home_angle = np.arctan(y/x)
+        if x > 0:
+            home_angle = np.pi - home_angle
+        if y > 0:
+            home_angle = 2*np.pi -home_angle
+        return home_angle
+
+    def get_rotation(self, radians):
+        radian = 2078/(2 * np.pi)
+        left_wheel = int(radians * radian + self.data.wheel_values[0])
+        right_wheel = int(-radians * radian + self.data.wheel_values[1])
+        return left_wheel, right_wheel
+
+

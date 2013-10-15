@@ -151,10 +151,19 @@ class Robot(object):
     def start(self):
         obj_avoid = behaviors.ObjAvoid(self.data)
         wall_follow = behaviors.WallFollow(self.data)
+        go_home = behaviors.GoHome(self.data)
         last_time = time.time()
+        start_time = last_time
+        time_up = False
         try:
             while self.running:
-                dt = (time.time() - last_time)
+                current_time = time.time()
+                if (not time_up and current_time - start_time > 5):
+                    time_up = True
+                    if self.r.state is not 1:
+                        self.r.state = 3
+
+                dt = (current_time - last_time)
                 last_time = time.time()
                 self.update_data()
                 self.calculate_pose(dt)
@@ -173,8 +182,11 @@ class Robot(object):
                     self.state_led(1)
                     speed = obj_avoid.step()
                     if speed == (5, 5):
-                        self.r.state = 2
-                        wall_follow.prev_vals = vals
+                        if time_up:
+                            self.r.state = 3
+                        else:
+                            self.r.state = 2
+                            wall_follow.prev_vals = vals
                         speed = (0,0)
                 elif self.r.state is 2:
                     self.state_led(2)
@@ -188,6 +200,19 @@ class Robot(object):
                         continue
                     speed = wall_follow.step()
                     #print "Following :)"
+                elif self.r.state is 3:
+                    print 'going home'
+                    self.state_led(3)
+                    self.r.stop()
+                    rotation = go_home.step()
+                    print 'wheel values: ', self.data.wheel_values
+                    print 'rotation: ', rotation
+                    if rotation[0] != self.data.wheel_values[0]:
+                        self.r.set_values('C', rotation)
+                        time.sleep(3)
+                        self.r.state = 0
+                    speed = (5, 5)
+
                 if speed:
                     self.data.wheel_speeds = speed
                     self.r.turn(speed)
