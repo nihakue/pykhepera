@@ -38,7 +38,7 @@ def get_omega():
     vl, vr = data.wheel_speeds
     if vr == vl:
         return 0
-    omega = (vr - vl)/axis_l
+    omega = ((vr - vl)/axis_l)
     return omega
 
 def get_R():
@@ -161,7 +161,7 @@ def start():
     last_time = time.time()
     try:
         while 1:
-            dt = (time.time() - last_time) * 1000 #convert to ms
+            dt = (time.time() - last_time)
             last_time = time.time()
             update_data()
             calculate_pose(dt)
@@ -215,4 +215,4 @@ ax.axis([-1000, 1000, -1000, 1000])
 line, = ax.plot(data.x_positions, data.y_positions)
 
 r = load()
-axis_l = 53 #axis length in mm
+axis_l = 53.0 #axis length in mm

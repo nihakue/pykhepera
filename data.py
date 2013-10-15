@@ -65,7 +65,7 @@ class Data(object):
         return self._wheel_speeds
     @wheel_speeds.setter
     def wheel_speeds(self, value):
-        self._wheel_speeds = value
+        self._wheel_speeds = [val * 8 for val in value] #convert to mm/s
 
     @property
     def theta(self):
