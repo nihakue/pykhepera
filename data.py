@@ -18,11 +18,6 @@ class Data(object):
     'wall_min': 75
     }
 
-    def __init__(self, thresholds={}, sensor_values=[]):
-        self._sensor_values = sensor_values
-        if thresholds:
-            self._thresholds = thresholds
-
     @property
     def sensor_values(self):
         return self._sensor_values
