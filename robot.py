@@ -9,14 +9,11 @@ from data import Data
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+import pdb
 
 def update_data():
     data.sensor_values = r.read_sensor_values()
-    # aux = r.read_wheel_values()
-    # data.wheel_values = aux
-    # data.wheel_delta = (aux[0]-data.wheel_values[0],
-    #     aux[1]-data.wheel_values[1])
-    # data.wheel_speeds = r.read_wheel_speeds()
+    data.wheel_values = aux = r.read_wheel_values()
 
 def restart():
     r = load()
@@ -67,7 +64,6 @@ def calculate_pose(dt):
         pose = (np.array([x, y, theta]))
         translation = np.array([vl*np.cos(theta), vl*np.sin(theta), 0])
         pose = pose + translation
-        print translation
     else:
         R = get_R()
         ICC = get_ICC()
@@ -104,9 +100,9 @@ def calibrate():
 
 
 def calibrate_min():
+    r.reset_wheel_counters()
     update_data()
     mins = data.sensor_values
-    r.set_values('g', [0, -0])
     r.turn((5,-5))
     while data.wheel_values[0] <  2000:
         update_data()
@@ -122,7 +118,12 @@ def calibrate_min():
     data.thresholds['max_ir_reading'] = m
     data.thresholds['wall_max'] = m
     if m:
-        print 'calibration succesful'
+        print 'calibration succesful: ', mins
+        fout = open('data_calibration.data', 'a')
+        fout.write('%d:%s' % (m, ''.join(str(mins))))
+        fout.write('\n')
+        fout.close()
+
 
 def update_plot():
     line.set_xdata(data.x_positions)
@@ -202,8 +203,7 @@ def start():
     except KeyboardInterrupt:
         print 'killing and cleaning up'
         r.purge_buffer()
-        r.led(0,0)
-        r.led(1,0)
+        state_LED(0)
         r.stop()
         r.kill()
 
@@ -211,7 +211,7 @@ data = Data()
 plt.ion()
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
-ax.axis([-1000, 1000, -1000, 1000])
+ax.axis([-3000, 3000, -3000, 3000])
 line, = ax.plot(data.x_positions, data.y_positions)
 
 r = load()
