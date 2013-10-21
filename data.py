@@ -1,7 +1,7 @@
 import numpy as np
 
 class Data(object):
-    """Data model for sensor values, wheel and position 
+    """Data model for sensor values, wheel and position
     information, and odometry"""
 
     _sensor_values = []
@@ -15,8 +15,12 @@ class Data(object):
     _thresholds = {
     'max_ir_reading': 120, # This represents the min distance
     'wall_max': 250,
-    'wall_min': 75
+    'wall_min': 20
     }
+
+    def clear(self):
+        self._x_positions = [0]
+        self._y_positions = [0]
 
     @property
     def sensor_values(self):
@@ -38,21 +42,21 @@ class Data(object):
     @thresholds.setter
     def thresholds(self, value):
         self._thresholds = value
-    
+
     @property
     def x_positions(self):
         return self._x_positions
     @x_positions.setter
     def x_positions(self, value):
         self._x_positions = value
-    
+
     @property
     def y_positions(self):
         return self._y_positions
     @y_positions.setter
     def y_positions(self, value):
         self._y_positions = value
-    
+
     @property
     def wheel_delta(self):
         return self._wheel_delta
@@ -73,6 +77,6 @@ class Data(object):
     @theta.setter
     def theta(self, value):
         self._theta = value
-    
-    
-    
+
+
+

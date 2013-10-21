@@ -1,4 +1,4 @@
-'''This is a tiny helper module containing wrapper functions for working 
+'''This is a tiny helper module containing wrapper functions for working
 with the khepera robot
 '''
 import serial
@@ -14,7 +14,7 @@ class PyKhepera():
         'G': ['pos_left', 'pos_right'],
         'L': ['led_num', 'state']
     }
-    
+
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.05):
         self.timeout = timeout
@@ -27,6 +27,8 @@ class PyKhepera():
 
         self.purge_buffer()
         self.speed = (0,0)
+
+        self.diameter = 53 #milimeters
 
     def purge_buffer(self, verbose=False):
         response = self.ser.readline()
@@ -90,6 +92,22 @@ class PyKhepera():
             except Exception, e:
                 continue
         return return_vals
+
+    def to_mm(self, wheel_value):
+        return float(wheel_value * 0.08)
+
+    def to_wu(self, mm):
+        return int(mm/0.08)
+
+    def rotate(self, rotation, radians=True):
+        self.stop()
+        current_wv = self.read_wheel_values()
+        if radians:
+            omega = self.to_wu((self.diameter/2) * rotation)
+        desired_wv = [int(current_wv[0] - omega),
+            int(current_wv[1] + omega)]
+
+        self.set_values('C', desired_wv)
 
     def set_values(self, command, args, verbose=False):
         command = command.upper()

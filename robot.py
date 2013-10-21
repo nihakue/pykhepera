@@ -14,6 +14,7 @@ class Robot(object):
     etc.
     '''
     def __init__(self):
+        super(Robot, self).__init__()
         self.data = Data()
         plt.ion()
         self.fig = plt.figure()
@@ -22,17 +23,11 @@ class Robot(object):
         self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0 #self.axis length in mm
-        self.running = True
+        self.data.clear()
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
         self.data.wheel_values = self.r.read_wheel_values()
-
-    def to_mm(self, wheel_value):
-        return float(wheel_value * 0.08)
-
-    def to_wu(self, mm):
-        return int(mm/0.08)
 
     def get_omega(self):
         vl, vr = self.data.wheel_speeds
@@ -138,7 +133,7 @@ class Robot(object):
             if val > self.data.thresholds['max_ir_reading']:
                 return True
 
-    def state_led(self, number):
+    def led_state(self, number):
         '''converts a number to binary and lights LED accordingly'''
         if number > 3:
             return
@@ -148,7 +143,7 @@ class Robot(object):
         for i, bit in enumerate(binary):
             self.r.led(i, bit)
 
-    def start(self):
+    def run(self):
         obj_avoid = behaviors.ObjAvoid(self.data)
         wall_follow = behaviors.WallFollow(self.data)
         go_home = behaviors.GoHome(self.data)
@@ -156,11 +151,11 @@ class Robot(object):
         start_time = last_time
         time_up = False
         try:
-            while self.running:
+            while True:
                 current_time = time.time()
                 if (not time_up and current_time - start_time > 5):
                     time_up = True
-                    if self.r.state is not 1:
+                    if self.r.state is not 0:
                         self.r.state = 3
 
                 dt = (current_time - last_time)
@@ -172,14 +167,14 @@ class Robot(object):
                 speed = (0,0)
                 vals = self.data.sensor_values
                 if self.r.state is 0:
-                    self.state_led(0)
+                    self.led_state(0)
                     if self.will_collide():
                         speed = (0,0)
                         self.r.state = 1
                     else:
                         speed = (5,5)
                 if self.r.state is 1:
-                    self.state_led(1)
+                    self.led_state(1)
                     speed = obj_avoid.step()
                     if speed == (5, 5):
                         if time_up:
@@ -189,7 +184,7 @@ class Robot(object):
                             wall_follow.prev_vals = vals
                         speed = (0,0)
                 elif self.r.state is 2:
-                    self.state_led(2)
+                    self.led_state(2)
                     if self.will_collide():
                         self.r.state = 1
                         continue
@@ -202,23 +197,22 @@ class Robot(object):
                     #print "Following :)"
                 elif self.r.state is 3:
                     print 'going home'
-                    self.state_led(3)
+                    self.led_state(3)
                     self.r.stop()
-                    rotation = go_home.step()
+                    suggestion = go_home.step()
+                    rotation = suggestion['rotation']
                     print 'wheel values: ', self.data.wheel_values
                     print 'rotation: ', rotation
-                    if rotation[0] != self.data.wheel_values[0]:
-                        self.r.set_values('C', rotation)
-                        time.sleep(3)
-                        self.r.state = 0
-                    speed = (5, 5)
-
+                    self.r.rotate(rotation)
+                    time.sleep(2)
+                    self.data.theta =
+                    self.r.state = 0
                 if speed:
                     self.data.wheel_speeds = speed
                     self.r.turn(speed)
         except KeyboardInterrupt:
             print 'killing and cleaning up'
             self.r.purge_buffer()
-            self.state_led(0)
+            self.led_state(0)
             self.r.stop()
             self.r.kill()
