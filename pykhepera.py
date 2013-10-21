@@ -7,13 +7,14 @@ class PyKhepera():
     """this represents a khepera robot."""
 
     #Constants
-    _get_commands = ['N', 'H', 'O']
+    _get_commands = ['N', 'H', 'O', 'E']
 
     _set_commands = {
         'C': ['pos_left', 'pos_right'],
         'G': ['pos_left', 'pos_right'],
         'L': ['led_num', 'state']
     }
+    
 
     def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.05):
         self.timeout = timeout
@@ -25,6 +26,7 @@ class PyKhepera():
         self.state = 0
 
         self.purge_buffer()
+        self.speed = (0,0)
 
     def purge_buffer(self, verbose=False):
         response = self.ser.readline()
@@ -47,15 +49,27 @@ class PyKhepera():
     def stop(self):
         self.set_speed(0)
 
-    def turn(self, left, right):
-        print 'setting speed to: %s %s' % (left, right)
-        self.ser.write('D,%d,%d\n' % (left, right))
-        self.purge_buffer()
+    def turn(self, (left, right)):
+        if (left,right) != self.speed:
+            # print 'setting speed to: %s %s' % (left, right)
+            self.ser.write('D,%d,%d\n' % (left, right))
+            self.purge_buffer()
+            self.speed = left,right
+
+    def read_sensor_values(self):
+        return self.get_values('N')
+
+    def read_wheel_values(self):
+        return self.get_values('H')
+
+    def reset_wheel_counters(self):
+        self.set_values('g', [0, 0])
+
+    def read_wheel_speeds(self):
+        return self.get_values('E')
 
     def get_values(self, command):
         command = command.upper()
-        self.purge_buffer()
-
         if command not in PyKhepera._get_commands:
             print 'not a valid command'
             return
@@ -71,9 +85,10 @@ class PyKhepera():
                 val = val.replace(token,'')
             if val == command.lower():
                 continue
-            return_vals.append(int(val))
-        if len(return_vals) == 0:
-            raise IndexError("return vals is empty")
+            try:
+                return_vals.append(int(val))
+            except Exception, e:
+                continue
         return return_vals
 
     def set_values(self, command, args, verbose=False):
