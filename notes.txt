@@ -1,0 +1,3 @@
+We decided to program a navigation that doesn't care about the error. 
+
+We got the travel_to function within 1mm

@@ -70,6 +70,12 @@ class PyKhepera():
     def read_wheel_speeds(self):
         return self.get_values('E')
 
+    def travel(self, distance):
+        current_wv = self.read_wheel_values()
+        destination_wv = [wv+distance for wv in current_wv]
+        print '%s, %s, %s' % (current_wv, distance, destination_wv)
+        self.set_values('C', destination_wv)
+
     def get_values(self, command):
         command = command.upper()
         if command not in PyKhepera._get_commands:
@@ -104,8 +110,8 @@ class PyKhepera():
         current_wv = self.read_wheel_values()
         if radians:
             omega = self.to_wu((self.diameter/2) * rotation)
-        desired_wv = [int(current_wv[0] - omega),
-            int(current_wv[1] + omega)]
+        desired_wv = [int(current_wv[0] + omega),
+            int(current_wv[1] - omega)]
 
         self.set_values('C', desired_wv)
 

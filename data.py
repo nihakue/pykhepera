@@ -5,7 +5,7 @@ class Data(object):
     information, and odometry"""
 
     _sensor_values = []
-    _wheel_values = []
+    _wheel_values = [0, 0]
     _wheel_delta = []
     _x_positions = [0]
     _y_positions = [0]

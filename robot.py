@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 import threading
+import utils
 
 class Robot(object):
     '''This is the logic/execution module for the pykhepera robot. It handles the
@@ -16,17 +17,18 @@ class Robot(object):
     def __init__(self):
         super(Robot, self).__init__()
         self.data = Data()
-        plt.ion()
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1,1,1)
-        self.ax.axis([-1000, 1000, -1000, 1000])
-        self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
+        # plt.ion()
+        # self.fig = plt.figure()
+        # self.ax = self.fig.add_subplot(1,1,1)
+        # self.ax.axis([-1000, 1000, -1000, 1000])
+        # self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0 #self.axis length in mm
         self.data.clear()
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
+        self.data.wheel_speeds = self.r.read_wheel_speeds()
         self.data.wheel_values = self.r.read_wheel_values()
 
     def get_omega(self):
@@ -87,8 +89,6 @@ class Robot(object):
         self.data.y_positions.append(pose[1])
         self.data.theta = pose[2]
 
-
-
     def calibrate(self):
         self.update_data()
         self.r.turn((1,-4))
@@ -102,6 +102,7 @@ class Robot(object):
         self.update_data()
         mins = self.data.sensor_values
         self.r.turn((5,-5))
+        print self.data.wheel_values
         while self.data.wheel_values[0] <  2000:
             self.update_data()
             aux = self.data.sensor_values
@@ -124,6 +125,7 @@ class Robot(object):
 
 
     def update_plot(self):
+        pass
         self.line.set_xdata(self.data.x_positions)
         self.line.set_ydata(self.data.y_positions)
         self.fig.canvas.draw()
@@ -205,10 +207,8 @@ class Robot(object):
                     print 'rotation: ', rotation
                     self.r.rotate(rotation)
                     time.sleep(2)
-                    self.data.theta =
                     self.r.state = 0
                 if speed:
-                    self.data.wheel_speeds = speed
                     self.r.turn(speed)
         except KeyboardInterrupt:
             print 'killing and cleaning up'
