@@ -9,6 +9,14 @@ import pdb
 import threading
 import utils
 
+class Pose(object):
+    """Robot pose"""
+    def __init__(self, x=0, y=0, theta=0):
+        super(Pose, self).__init__()
+        self.x = x
+        self.y = y
+        self.theta = theta
+
 class Robot(object):
     '''This is the logic/execution module for the pykhepera robot. It handles the
     high level functions such as reloading the robot, controlling the robot,
@@ -17,11 +25,11 @@ class Robot(object):
     def __init__(self):
         super(Robot, self).__init__()
         self.data = Data()
-        # plt.ion()
-        # self.fig = plt.figure()
-        # self.ax = self.fig.add_subplot(1,1,1)
-        # self.ax.axis([-1000, 1000, -1000, 1000])
-        # self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
+        plt.ion()
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(1,1,1)
+        self.ax.axis([-1000, 1000, -1000, 1000])
+        self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0 #self.axis length in mm
         self.data.clear()
@@ -101,6 +109,7 @@ class Robot(object):
         self.r.reset_wheel_counters()
         self.update_data()
         mins = self.data.sensor_values
+        maxs = mins
         self.r.turn((5,-5))
         print self.data.wheel_values
         while self.data.wheel_values[0] <  2000:
@@ -109,13 +118,17 @@ class Robot(object):
             for i, val in enumerate(aux):
                 if val > mins[i]:
                     mins[i] = val
+                else:
+                    maxs[i] = val
         self.r.turn((0,0))
         m = 0
         for val in mins:
             m += val
         m = m/8
-        self.data.thresholds['mself.ax_ir_reading'] = m
-        self.data.thresholds['wall_mself.ax'] = m
+        maxs_avg = sum((val in maxs))/len(maxs)
+        self.data.thresholds['max_ir_reading'] = m
+        self.data.thresholds['wall_max'] = m
+        self.data.thresholds['wall_min'] = maxs_avg
         if m:
             print 'calibration succesful: ', mins
             fout = open('data_calibration.data', 'a')
@@ -125,7 +138,6 @@ class Robot(object):
 
 
     def update_plot(self):
-        pass
         self.line.set_xdata(self.data.x_positions)
         self.line.set_ydata(self.data.y_positions)
         self.fig.canvas.draw()
@@ -155,10 +167,10 @@ class Robot(object):
         try:
             while True:
                 current_time = time.time()
-                if (not time_up and current_time - start_time > 5):
-                    time_up = True
-                    if self.r.state is not 0:
-                        self.r.state = 3
+                # if (not time_up and current_time - start_time > 5):
+                #     time_up = True
+                #     if self.r.state is not 0:
+                #         self.r.state = 3
 
                 dt = (current_time - last_time)
                 last_time = time.time()

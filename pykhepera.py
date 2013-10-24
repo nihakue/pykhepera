@@ -123,6 +123,7 @@ class PyKhepera():
         if len(args) != len(PyKhepera._set_commands[command]):
             print 'invalid arguments.\
             was expecting the form: %s' % PyKhepera._set_commands[command]
+            print 'received %s' % (command)
             return
         arg_string = ','.join(str(x) for x in args)
         if verbose:
