@@ -40,5 +40,3 @@ def lap():
         r.r.travel(distance)
         time.sleep(3)
         pose = Pose(x=point.x, y=point.y, theta=pose.theta-angle)
-
-
