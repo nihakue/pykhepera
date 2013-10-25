@@ -1,6 +1,8 @@
 import numpy as np
 import pdb
 
+
+
 class Point(object):
     """This is a point in the x y plane"""
     def __init__(self, x=0, y=0):
@@ -10,6 +12,8 @@ class Point(object):
 
     def __string__(self):
         return "POINT"
+        
+home_position = Point(x=503, y=484)
 
 def to_mm(wheel_value):
         return float(wheel_value * 0.08)
@@ -59,4 +63,10 @@ def wu_to_point(destination, pose):
     mm_distance = np.linalg.norm(destination_vector)
     wu_distance = to_wu(mm_distance)
     return wu_distance
+
+def mm_between(destination, origin):
+    '''mm between two points'''
+    destination_vector = vector_to_point(destination, origin)
+    mm_distance = np.linalg.norm(destination_vector)
+    return mm_distance
 

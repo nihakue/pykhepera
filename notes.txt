@@ -4,11 +4,18 @@ We got the travel_to function within 1mm
 
 point to point algorithm works but with a non-trivial error
 
+
+not used A*. Used a similar algorithm because we already know the value of the distance to the origin from all our map points.
+all our map movements will be from a node to home, or from home to a node (that path is the inverse of node-home)
+Tested the algorithm with tribial test (function navmap in tests)
+
+
+
 TO DO:
 	Better callibration for distances, etc ---Andres
 	build map ---Gabe
 	function to map IR readings to real distances given calibration data ---Gabe
-	A* algorithm ---Andres
+	A* algorithm ---Andres (done, in map.py)
 	Particle filter! --- Both
 	Raycasting/simulation for expected ---Gabe 
 	detect found food function ---Andres

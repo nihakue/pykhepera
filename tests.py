@@ -5,6 +5,8 @@ import numpy as np
 import utils
 from utils import Point
 import time
+import map
+
 
 LOOP = [(560, 293), (916, 293),(1021, 476),
 (1128,892), (883, 807), (765, 714),
@@ -40,3 +42,19 @@ def lap():
         r.r.travel(distance)
         time.sleep(3)
         pose = Pose(x=point.x, y=point.y, theta=pose.theta-angle)
+
+def navmap():
+    loop = [Point(x=x1,y=y1) for x1,y1 in LOOP]
+    lnodes = []
+    lnodes.append(map.Node("h", utils.home_position, ["A","H"]))
+    lnodes.append(map.Node("A", loop[0], ["h","B"]))
+    lnodes.append(map.Node("B", loop[1], ["A","C"]))
+    lnodes.append(map.Node("C", loop[2], ["B","D"]))
+    lnodes.append(map.Node("D", loop[3], ["C","E"]))
+    lnodes.append(map.Node("E", loop[4], ["D","F"]))
+    lnodes.append(map.Node("F", loop[5], ["E","G"]))
+    lnodes.append(map.Node("G", loop[6], ["F","H"]))
+    lnodes.append(map.Node("H", loop[7], ["G","h"]))
+    nodesMap = map.NodeMap(lnodes)
+    path = map.find_path_to_home(nodesMap, "D")
+    print path
