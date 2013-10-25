@@ -4,9 +4,9 @@ class Data(object):
     """Data model for sensor values, wheel and position
     information, and odometry"""
 
-    _sensor_values = []
+    _sensor_values = [0,0,0,0,0,0,0,0]
     _wheel_values = [0, 0]
-    _wheel_delta = []
+    _wheel_delta = [0,0]
     _x_positions = [0]
     _y_positions = [0]
     _wheel_speeds = [0, 0]

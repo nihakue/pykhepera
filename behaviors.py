@@ -125,10 +125,3 @@ class GoHome(Behavior):
         x = self.data.x_positions[-1]
         y = self.data.y_positions[-1]
         return np.array([-x, -y])
-
-    def get_rotation(self, radians):
-        radian = 2078/(2 * np.pi)
-        left_wheel = int(radians * radian + self.data.wheel_values[0])
-        right_wheel = int(-radians * radian + self.data.wheel_values[1])
-        return left_wheel, right_wheel
-

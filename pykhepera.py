@@ -22,12 +22,9 @@ class PyKhepera():
         self.baud = baud
         self.newlines = ['\r', '\n']
         self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
-
         self.state = 0
-
         self.purge_buffer()
         self.speed = (0,0)
-
         self.diameter = 53 #milimeters
 
     def purge_buffer(self, verbose=False):

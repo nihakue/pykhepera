@@ -1,3 +1,14 @@
 We decided to program a navigation that doesn't care about the error. 
 
 We got the travel_to function within 1mm
+
+point to point algorithm works but with a non-trivial error
+
+TO DO:
+	Better callibration for distances, etc ---Andres
+	build map ---Gabe
+	function to map IR readings to real distances given calibration data ---Gabe
+	A* algorithm ---Andres
+	Particle filter! --- Both
+	Raycasting/simulation for expected ---Gabe 
+	detect found food function ---Andres
