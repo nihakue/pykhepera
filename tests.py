@@ -6,6 +6,7 @@ import utils
 from utils import Point
 import time
 import map
+import odometry
 
 
 LOOP = [(560, 293), (916, 293),(1021, 476),
@@ -63,3 +64,31 @@ def navmap():
 def cal_distances():
     r = Robot()
     r.calibrate_distances()
+
+
+def raycasting():
+    raw_input('place the robot at the home position and press enter.')
+
+
+def new_odo():
+    raw_input('press enter when ready')
+    r = Robot()
+    wheel_speeds = r.r.read_wheel_speeds()
+    current_pose = Pose(0, 0, np.pi/2)
+    prev_time = time.time()
+    print 'current_pose: (x)%d, (y)%d, (theta)%.2f' % (current_pose.x,
+                                                       current_pose.y,
+                                                       current_pose.theta)
+    r.r.rotate(np.pi/4)
+    for i in xrange(100):
+        current_time = time.time()
+        dt = current_time - prev_time
+        wheel_speeds = r.r.read_wheel_speeds()
+        current_pose = odometry.calculate_new_pose(current_pose,
+                                                   wheel_speeds, dt)
+        prev_time = current_time
+        print current_pose.theta
+
+    print 'current_pose: (x)%d, (y)%d, (theta)%.2f' % (current_pose.x,
+                                                       current_pose.y,
+                                                       current_pose.theta)

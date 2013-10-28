@@ -37,13 +37,10 @@ def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
         plt.imshow(__arena, origin='lower')
         plt.xlim(-5, np.size(__arena, axis=1))
         plt.ylim(-5, np.size(__arena, axis=0))
-        robot_circle = plt.Circle((pose.x, pose.y),
-                              radius=radius, color='g')
-        plt.gca().add_artist(robot_circle)
 
     lidar_range = {}
     for laser, theta in __lidar.iteritems():
-        phi = pose.phi + theta
+        phi = pose.theta + theta
         offset = phi
         bow_stern_offset = 14.5
 
@@ -89,6 +86,9 @@ def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
             yb = y[indices[0]]
             if plot:
                 plt.plot(xb, yb, 'g*')
+                robot_circle = plt.Circle((pose.x, pose.y),
+                                          radius=radius, color='g')
+                plt.gca().add_artist(robot_circle)
             dist = np.sqrt((pose.x - xb)**2 + (pose.y - yb)**2)
             #update the range dictionary
             lidar_range[laser] = dist

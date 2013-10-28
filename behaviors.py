@@ -18,7 +18,6 @@ class ObjAvoid(Behavior):
             print 'no values available'
             return
         vals = self.data.sensor_values
-        print 'vals: ', vals
         max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5
         vr = 5
