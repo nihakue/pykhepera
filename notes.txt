@@ -12,6 +12,13 @@ Tested the algorithm with tribial test (function navmap in tests)
 
 nodes closer than 100mm to any object because of the sensors
 
+each sensor has independent readings (should take it in account for particle filter)
+
+Done an easy food detection function that detects food when all the sensor values are over 100 (seems to work without problems)
+
+for the calibration distances we can assume that the function that transforms a ir reading to a distance is linear between two points (it is exponential)
+still have to look how to get the values of the lateral sensors for this
+
 
 TO DO:
 	Better callibration for distances (calibrate what does 10 mm look like), etc ---Andres
@@ -20,4 +27,4 @@ TO DO:
 	A* algorithm ---Andres (done, in map.py)
 	Particle filter! --- Both
 	Raycasting/simulation for expected ---Gabe 
-	detect found food function ---Andres
+	detect found food function (done, should improve?) ---Andres

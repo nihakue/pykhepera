@@ -131,20 +131,49 @@ class Robot(object):
             fout.write('\n')
             fout.close()
 
-    def calibrate_distances(self):
+    def calibrate_distancesold(self):
         readings = []
         self.update_data()
-        readings = self.data.sensor_values
+        readings = []
+        readings.append(self.data.sensor_values)
         readings_delta = []
         for a in range(10):
-            self.r.travel(utils.to_wu(-10))
-            time.sleep(1)
+            self.r.travel(utils.to_wu(10))
+            time.sleep(0.5)
             self.update_data()
             readings_delta.append([x - y for x,y in
-                                  zip(readings,self.data.sensor_values)])
-            readings = self.data.sensor_values
-        for r in readings_delta:
-            print r[2], r[3]
+                                  zip(readings[-1],self.data.sensor_values)])
+            readings.append(self.data.sensor_values)
+        for r in readings:
+            print r[6], r[7]
+
+    def calibrate_distances(self):
+        #readings_back = []
+        #readings_front = []
+        readings2 = []
+        readings3 = []
+        readings6 = []
+        readings7 = []
+        for a in range(10):
+            self.update_data()
+            #readings_back.append((self.data.sensor_values[4], self.data.sensor_values[5]))
+            readings6.append(self.data.sensor_values[6])
+            readings7.append(self.data.sensor_values[7])
+            self.r.travel(utils.to_wu(10))
+            time.sleep(0.5)
+        print "Put Facing a wall"
+        time.sleep(5)
+        for a in range(10):
+            self.update_data()
+            #readings_front.append((self.data.sensor_values[2], self.data.sensor_values[3]))
+            readings2.append(self.data.sensor_values[2])
+            readings3.append(self.data.sensor_values[3])
+            self.r.travel(utils.to_wu(-10))
+            time.sleep(0.5)
+        self.data.thresholds['sensor2'] = readings2
+        self.data.thresholds['sensor3'] = readings3
+        self.data.thresholds['sensor6'] = readings6
+        self.data.thresholds['sensor7'] = readings7
 
     def update_plot(self):
         self.line.set_xdata(self.data.x_positions)
@@ -177,16 +206,16 @@ class Robot(object):
                                                          plot=True)
 
     def food_found(self):
-        m = 0
+        # m = 0
+        # for val in self.data.sensor_values:
+        #     m += val
+        # m = m/8
+        # print "media: ",str(m)
+        # if m < 100:
+        #     return False
         for val in self.data.sensor_values:
-            m += val
-        m = m/8
-        print "media: ",str(m)
-        if m < 100:
-            return False
-        for val in self.data.sensor_values:
-            print val-m
-            if (((val-m) > 70) or ((val-m) < -70)):
+            #if (((val-m) > 70) or ((val-m) < -70)):
+            if val < 100:
                 return False
         return True
 
@@ -208,12 +237,11 @@ class Robot(object):
                 dt = (current_time - last_time)
                 last_time = time.time()
                 self.update(dt)
-                # if self.food_found():
-                #     print "fooooooood!!"
-                #     speed = (0, 0)
-                #     self.r.turn(speed)
-                #     time.sleep(10)
-
+                if self.food_found():
+                    print "fooooooood!!"
+                    speed = (0, 0)
+                    self.r.turn(speed)
+                    time.sleep(10)
                 speed = (0, 0)
                 vals = self.data.sensor_values
                 if self.r.state is 0:

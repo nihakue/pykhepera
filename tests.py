@@ -64,6 +64,15 @@ def navmap():
 def cal_distances():
     r = Robot()
     r.calibrate_distances()
+    print "sensor 2"
+    print r.data.thresholds['sensor2']
+    print "sensor 3"
+    print r.data.thresholds['sensor3']
+    print "sensor 6"
+    print r.data.thresholds['sensor6']
+    print "sensor 7"
+    print r.data.thresholds['sensor7']
+
 
 
 def raycasting():

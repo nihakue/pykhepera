@@ -15,7 +15,11 @@ class Data(object):
     _thresholds = {
     'max_ir_reading': 120, # This represents the min distance
     'wall_max': 250,
-    'wall_min': 20
+    'wall_min': 20,
+    'sensor2': [0,0,0,0,0,0,0,0,0,0],
+    'sensor3': [0,0,0,0,0,0,0,0,0,0],
+    'sensor6': [0,0,0,0,0,0,0,0,0,0],
+    'sensor7': [0,0,0,0,0,0,0,0,0,0]    
     }
 
     def clear(self):
