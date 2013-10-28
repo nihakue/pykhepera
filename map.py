@@ -10,6 +10,7 @@ class Node(object):
         
 
 class NodeMap:
+    """This is a graph of the nodes in the map"""
     def __init__(self, lnodes):
         self.nodes = lnodes
         home = self.search_node("h")

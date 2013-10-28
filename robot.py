@@ -25,11 +25,11 @@ class Robot(object):
     def __init__(self):
         super(Robot, self).__init__()
         self.data = Data()
-        plt.ion()
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1,1,1)
-        self.ax.axis([-1000, 1000, -1000, 1000])
-        self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
+        # plt.ion()
+        # self.fig = plt.figure()
+        # self.ax = self.fig.add_subplot(1,1,1)
+        # self.ax.axis([-1000, 1000, -1000, 1000])
+        # self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0 #self.axis length in mm
         self.data.clear()
@@ -97,13 +97,6 @@ class Robot(object):
         self.data.y_positions.append(pose[1])
         self.data.theta = pose[2]
 
-    def calibrate(self):
-        self.update_data()
-        self.r.turn((1,-4))
-        while (self.data.wheel_values[0] + self.data.wheel_values[1]) < 2078:
-            self.update_data()
-        self.r.turn((0,0))
-
 
     def calibrate_min(self):
         self.r.reset_wheel_counters()
@@ -135,6 +128,16 @@ class Robot(object):
             fout.write('%d:%s' % (m, ''.join(str(mins))))
             fout.write('\n')
             fout.close()
+
+    def calibrate_distances(self):
+        readings = []
+        for a in range(1,11):
+            time.sleep(1)
+            self.update_data()
+            readings.append(self.data.sensor_values)
+            self.r.travel(utils.to_wu(-10))
+        for r in readings:
+            print r[2], r[3]
 
 
     def update_plot(self):

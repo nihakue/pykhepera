@@ -10,10 +10,12 @@ all our map movements will be from a node to home, or from home to a node (that 
 Tested the algorithm with tribial test (function navmap in tests)
 
 
+nodes closer than 100mm to any object because of the sensors
+
 
 TO DO:
-	Better callibration for distances, etc ---Andres
-	build map ---Gabe
+	Better callibration for distances (calibrate what does 10 mm look like), etc ---Andres
+	build map ---Gabe (done)
 	function to map IR readings to real distances given calibration data ---Gabe
 	A* algorithm ---Andres (done, in map.py)
 	Particle filter! --- Both

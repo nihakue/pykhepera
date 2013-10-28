@@ -58,3 +58,8 @@ def navmap():
     nodesMap = map.NodeMap(lnodes)
     path = map.find_path_to_home(nodesMap, "D")
     print path
+
+
+def cal_distances():
+    r = Robot()
+    r.calibrate_distances()
