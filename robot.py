@@ -176,6 +176,21 @@ class Robot(object):
         self.lidar_range = raycasting.exp_range_for_pose(self.pose,
                                                          plot=True)
 
+    def food_found(self):
+        m = 0
+        for val in self.data.sensor_values:
+            m += val
+        m = m/8
+        print "media: ",str(m)
+        if m < 100:
+            return False
+        for val in self.data.sensor_values:
+            print val-m
+            if (((val-m) > 70) or ((val-m) < -70)):
+                return False
+        return True
+
+
     def run(self):
         obj_avoid = behaviors.ObjAvoid(self.data)
         wall_follow = behaviors.WallFollow(self.data)
@@ -193,6 +208,12 @@ class Robot(object):
                 dt = (current_time - last_time)
                 last_time = time.time()
                 self.update(dt)
+                # if self.food_found():
+                #     print "fooooooood!!"
+                #     speed = (0, 0)
+                #     self.r.turn(speed)
+                #     time.sleep(10)
+
                 speed = (0, 0)
                 vals = self.data.sensor_values
                 if self.r.state is 0:
