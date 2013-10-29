@@ -17,11 +17,11 @@ each sensor has independent readings (should take it in account for particle fil
 Done an easy food detection function that detects food when all the sensor values are over 100 (seems to work without problems)
 
 for the calibration distances we can assume that the function that transforms a ir reading to a distance is linear between two points (it is exponential)
-still have to look how to get the values of the lateral sensors for this
+CALIBRATION done. Method: take the readings for all the sensors in distances 0 to 10. made a function in utils, that maps a ir reading to a distance in mm. It needs the threshold related to the sensor and the reading.
 
 
 TO DO:
-	Better callibration for distances (calibrate what does 10 mm look like), etc ---Andres
+	Better callibration for distances (calibrate what does 10 mm look like), etc ---Andres (done, see notes above)
 	build map ---Gabe (done)
 	function to map IR readings to real distances given calibration data ---Gabe
 	A* algorithm ---Andres (done, in map.py)

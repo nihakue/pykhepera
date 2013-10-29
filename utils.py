@@ -70,3 +70,12 @@ def mm_between(destination, origin):
     mm_distance = np.linalg.norm(destination_vector)
     return mm_distance
 
+def estimated_distance(reading, threshold):
+    i = 1
+    while threshold[i] > reading:
+        i += 1
+    rang = float(threshold[i-1]-threshold[i])
+    pos = float(reading-threshold[i])
+    n = float(i)
+    return n+(pos/rang)
+

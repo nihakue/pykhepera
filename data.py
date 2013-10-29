@@ -16,8 +16,12 @@ class Data(object):
     'max_ir_reading': 120, # This represents the min distance
     'wall_max': 250,
     'wall_min': 20,
+    'sensor0': [0,0,0,0,0,0,0,0,0,0],
+    'sensor1': [0,0,0,0,0,0,0,0,0,0],
     'sensor2': [0,0,0,0,0,0,0,0,0,0],
     'sensor3': [0,0,0,0,0,0,0,0,0,0],
+    'sensor4': [0,0,0,0,0,0,0,0,0,0],
+    'sensor5': [0,0,0,0,0,0,0,0,0,0],
     'sensor6': [0,0,0,0,0,0,0,0,0,0],
     'sensor7': [0,0,0,0,0,0,0,0,0,0]    
     }

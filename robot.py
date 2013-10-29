@@ -131,49 +131,51 @@ class Robot(object):
             fout.write('\n')
             fout.close()
 
-    def calibrate_distancesold(self):
-        readings = []
-        self.update_data()
-        readings = []
-        readings.append(self.data.sensor_values)
-        readings_delta = []
-        for a in range(10):
-            self.r.travel(utils.to_wu(10))
-            time.sleep(0.5)
-            self.update_data()
-            readings_delta.append([x - y for x,y in
-                                  zip(readings[-1],self.data.sensor_values)])
-            readings.append(self.data.sensor_values)
-        for r in readings:
-            print r[6], r[7]
-
     def calibrate_distances(self):
-        #readings_back = []
-        #readings_front = []
-        readings2 = []
-        readings3 = []
-        readings6 = []
-        readings7 = []
+        readings = []
+        for i in range(8):
+            aux = []
+            readings.append(aux)
+        self.update_data()
         for a in range(10):
             self.update_data()
-            #readings_back.append((self.data.sensor_values[4], self.data.sensor_values[5]))
-            readings6.append(self.data.sensor_values[6])
-            readings7.append(self.data.sensor_values[7])
+            time.sleep(0.3)
+            readings[6].append(self.data.sensor_values[6])
+            readings[7].append(self.data.sensor_values[7])
+            self.r.rotate(-np.pi/2)
+            time.sleep(0.8)
+            self.update_data()
+            time.sleep(0.3)
+            readings[0].append(self.data.sensor_values[0])
+            self.r.rotate(-np.pi/4)
+            time.sleep(0.8)
+            self.update_data()
+            time.sleep(0.3)
+            readings[1].append(self.data.sensor_values[1])
+            self.r.rotate(-np.pi/4)
+            time.sleep(0.8)
+            self.update_data()
+            time.sleep(0.3)
+            readings[2].append(self.data.sensor_values[2])
+            readings[3].append(self.data.sensor_values[3])
+            self.r.rotate(-np.pi/4)
+            time.sleep(0.8)
+            self.update_data()
+            time.sleep(0.3)
+            readings[4].append(self.data.sensor_values[4])
+            self.r.rotate(-np.pi/4)
+            time.sleep(0.8)
+            self.update_data()
+            time.sleep(0.3)
+            readings[5].append(self.data.sensor_values[5])
+            self.r.rotate(-np.pi/2)
+            time.sleep(1.5)
             self.r.travel(utils.to_wu(10))
-            time.sleep(0.5)
-        print "Put Facing a wall"
-        time.sleep(5)
-        for a in range(10):
-            self.update_data()
-            #readings_front.append((self.data.sensor_values[2], self.data.sensor_values[3]))
-            readings2.append(self.data.sensor_values[2])
-            readings3.append(self.data.sensor_values[3])
-            self.r.travel(utils.to_wu(-10))
-            time.sleep(0.5)
-        self.data.thresholds['sensor2'] = readings2
-        self.data.thresholds['sensor3'] = readings3
-        self.data.thresholds['sensor6'] = readings6
-        self.data.thresholds['sensor7'] = readings7
+            time.sleep(0.8)
+        for i in range(8):
+            sensor = 'sensor'+str(i)
+            self.data.thresholds[sensor] = readings[i]
+        
 
     def update_plot(self):
         self.line.set_xdata(self.data.x_positions)
@@ -213,9 +215,11 @@ class Robot(object):
         # print "media: ",str(m)
         # if m < 100:
         #     return False
+        if len(self.data.sensor_values) == 0:
+            return False
         for val in self.data.sensor_values:
             #if (((val-m) > 70) or ((val-m) < -70)):
-            if val < 100:
+            if val < 300:
                 return False
         return True
 
@@ -226,6 +230,7 @@ class Robot(object):
         go_home = behaviors.GoHome(self.data)
         last_time = time.time()
         time_up = False
+        self.update_data()
         try:
             while True:
                 current_time = time.time()
@@ -254,13 +259,13 @@ class Robot(object):
                 if self.r.state is 1:
                     self.led_state(1)
                     speed = obj_avoid.step()
-                    if speed == (5, 5):
-                        if time_up:
-                            self.r.state = 3
-                        else:
-                            self.r.state = 2
-                            wall_follow.prev_vals = vals
-                        speed = (0, 0)
+                    # if speed == (5, 5):
+                    #     if time_up:
+                    #         self.r.state = 3
+                    #     else:
+                    #         self.r.state = 2
+                    #         wall_follow.prev_vals = vals
+                    #     speed = (0, 0)
                 elif self.r.state is 2:
                     self.led_state(2)
                     if self.will_collide():
