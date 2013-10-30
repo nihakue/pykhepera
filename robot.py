@@ -1,4 +1,3 @@
-
 import pykhepera, behaviors
 from data import Data
 import time
@@ -7,21 +6,14 @@ import raycasting
 import numpy as np
 import pdb
 import utils
-
-
-class Pose(object):
-    """Robot pose"""
-    def __init__(self, x=0, y=0, theta=0):
-        super(Pose, self).__init__()
-        self.x = x
-        self.y = y
-        self.theta = theta
+from particle_filter import ParticleFilter
+import json
 
 
 class Robot(object):
     '''This is the logic/execution module for the pykhepera robot. It handles the high level functions such as reloading the robot, controlling the robot, etc.
     '''
-    def __init__(self):
+    def __init__(self, num_particles=100):
         super(Robot, self).__init__()
         self.data = Data()
         plt.ion()
@@ -32,73 +24,88 @@ class Robot(object):
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0  # self.axis length in mm
         self.data.clear()
-        self.pose = Pose(utils.home_position.x, utils.home_position.y,
-                         np.pi/2)
+        self.pose = utils.home_pose
+        self.particle_filter = ParticleFilter(num_particles,
+                                              self.pose, self.data)
+        self.load_thresholds('distance_calibration.data')
+
+    def load_thresholds(self, filename):
+        try:
+            with open(filename) as in_file:
+                for line in in_file:
+                    indata = json.loads(line)
+                    if indata['day'] == time.localtime().tm_mday:
+                        self.data.thresholds = indata
+                    else:
+                        print 'need new calibration data. please calibrate'
+        except IOError:
+            print 'no data_calibration file found. setting to defaults'
+
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
         # self.data.wheel_speeds = self.r.read_wheel_speeds()
         self.data.wheel_values = self.r.read_wheel_values()
 
-    def get_omega(self):
-        vl, vr = self.data.wheel_speeds
-        if vr == vl:
-            return 0
-        omega = ((vr - vl)/self.axel_l)
-        return omega
+    # def get_omega(self):
+    #     vl, vr = self.data.wheel_speeds
+    #     if vr == vl:
+    #         return 0
+    #     omega = ((vr - vl)/self.axel_l)
+    #     return omega
 
-    def get_R(self):
-        vl, vr = self.data.wheel_speeds
-        if vl == vr:
-            return 0
-        R = (self.axel_l/2) * ((vl + vr)/(vr - vl))
-        return R
+    # def get_R(self):
+    #     vl, vr = self.data.wheel_speeds
+    #     if vl == vr:
+    #         return 0
+    #     R = (self.axel_l/2) * ((vl + vr)/(vr - vl))
+    #     return R
 
-    def get_ICC(self):
-        x = self.data.x_positions[-1]
-        y = self.data.y_positions[-1]
-        R = self.get_R()
-        theta = self.data.theta
+    # def get_ICC(self):
+    #     x = self.data.x_positions[-1]
+    #     y = self.data.y_positions[-1]
+    #     R = self.get_R()
+    #     theta = self.data.theta
 
-        ICC = ((x - (R * np.sin(theta))), (y + (R * np.cos(theta))))
-        return ICC
+    #     ICC = ((x - (R * np.sin(theta))), (y + (R * np.cos(theta))))
+    #     return ICC
 
-    def update_pose(self, dt):
-        x = self.data.x_positions[-1]
-        y = self.data.y_positions[-1]
-        theta = self.data.theta
+    # def update_pose(self, dt):
+    #     x = self.data.x_positions[-1]
+    #     y = self.data.y_positions[-1]
+    #     theta = self.data.theta
 
-        vl, vr = self.data.wheel_speeds
-        if vl == vr:
-            pose = (np.array([x, y, theta]))
-            translation = np.array([vl*np.cos(theta) * dt,
-                                   vl*np.sin(theta) * dt, 0])
-            pose = pose + translation
-        else:
-            ICC = self.get_ICC()
-            ICCx = ICC[0]
-            ICCy = ICC[1]
-            omega = self.get_omega()
+    #     vl, vr = self.data.wheel_speeds
+    #     if vl == vr:
+    #         pose = (np.array([x, y, theta]))
+    #         translation = np.array([vl*np.cos(theta) * dt,
+    #                                vl*np.sin(theta) * dt, 0])
+    #         pose = pose + translation
+    #     else:
+    #         ICC = self.get_ICC()
+    #         ICCx = ICC[0]
+    #         ICCy = ICC[1]
+    #         omega = self.get_omega()
 
-            rotation_matrix = np.array(
-                [
-                [np.cos(omega * dt), -np.sin(omega*dt), 0],
-                [np.sin(omega * dt), np.cos(omega * dt), 0],
-                [0,                  0,                  1]
-                ])
+    #         rotation_matrix = np.array(
+    #             [
+    #             [np.cos(omega * dt), -np.sin(omega*dt), 0],
+    #             [np.sin(omega * dt), np.cos(omega * dt), 0],
+    #             [0,                  0,                  1]
+    #             ])
 
-            ICC_vector = np.array([x - ICCx, y-ICCy, theta])
+    #         ICC_vector = np.array([x - ICCx, y-ICCy, theta])
 
-            reposition_vector = np.array([ICCx, ICCy, omega * dt])
+    #         reposition_vector = np.array([ICCx, ICCy, omega * dt])
 
-            pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
+    #         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
 
-        self.data.x_positions.append(pose[0])
-        self.data.y_positions.append(pose[1])
-        self.data.theta = pose[2]
-        self.pose.x = pose[0]
-        self.pose.y = pose[1]
-        self.pose.theta = pose[2]
+    #     self.data.x_positions.append(pose[0])
+    #     self.data.y_positions.append(pose[1])
+    #     self.data.theta = pose[2]
+    #     self.pose.x = pose[0]
+    #     self.pose.y = pose[1]
+    #     self.pose.theta = pose[2]
 
     def calibrate_min(self):
         self.r.reset_wheel_counters()
@@ -137,49 +144,57 @@ class Robot(object):
             aux = []
             readings.append(aux)
         self.update_data()
+        par = -1
         for a in range(10):
             self.update_data()
             time.sleep(0.3)
             readings[6].append(self.data.sensor_values[6])
             readings[7].append(self.data.sensor_values[7])
-            self.r.rotate(-np.pi/2)
+            self.r.rotate(par * np.pi/2)
             time.sleep(0.8)
             self.update_data()
             time.sleep(0.3)
             readings[0].append(self.data.sensor_values[0])
-            self.r.rotate(-np.pi/4)
+            self.r.rotate(par * np.pi/4)
             time.sleep(0.8)
             self.update_data()
             time.sleep(0.3)
             readings[1].append(self.data.sensor_values[1])
-            self.r.rotate(-np.pi/4)
+            self.r.rotate(par * np.pi/4)
             time.sleep(0.8)
             self.update_data()
             time.sleep(0.3)
             readings[2].append(self.data.sensor_values[2])
             readings[3].append(self.data.sensor_values[3])
-            self.r.rotate(-np.pi/4)
+            self.r.rotate(par * np.pi/4)
             time.sleep(0.8)
             self.update_data()
             time.sleep(0.3)
             readings[4].append(self.data.sensor_values[4])
-            self.r.rotate(-np.pi/4)
+            self.r.rotate(par * np.pi/4)
             time.sleep(0.8)
             self.update_data()
             time.sleep(0.3)
             readings[5].append(self.data.sensor_values[5])
-            self.r.rotate(-np.pi/2)
+            self.r.rotate(par * np.pi/2)
             time.sleep(1.5)
             self.r.travel(utils.to_wu(10))
             time.sleep(0.8)
         for i in range(8):
             sensor = 'sensor'+str(i)
             self.data.thresholds[sensor] = readings[i]
-        
+        with open('distance_calibration.data', 'a') as out_file:
+            calibration_event = self.data.thresholds
+            calibration_event['day'] = time.localtime().tm_mday
+            f_out = json.dumps(calibration_event)
+            out_file.write(f_out)
+
 
     def update_plot(self):
-        self.line.set_xdata(self.data.x_positions)
-        self.line.set_ydata(self.data.y_positions)
+        self.line.set_xdata(self.data.x_positions +
+                            self.particle_filter.get_x())
+        self.line.set_ydata(self.data.y_positions +
+                            self.particle_filter.get_y())
         self.fig.canvas.draw()
 
     def will_collide(self):
@@ -199,13 +214,18 @@ class Robot(object):
 
     def update(self, dt):
         self.update_data()
-        self.update_pose(dt)
+        self.pose = utils.update_pose(self.pose, self.data.wheel_speeds, dt)
+        self.data.x_positions.append(self.pose.x)
+        self.data.y_positions.append(self.pose.y)
+        self.data.theta = self.pose.theta
+        self.particle_filter.update(dt)
         self.update_plot()
         # self.update_expectations(dt)
 
     def update_expectations(self, dt):
         self.lidar_range = raycasting.exp_range_for_pose(self.pose,
                                                          plot=True)
+
 
     def food_found(self):
         # m = 0

@@ -21,6 +21,18 @@ def load_arena():
     __arena = np.flipud(misc.imread('arena.bmp'))
 
 
+def to_IR(distance):
+    pass
+
+
+def exp_readings_for_pose(pose, kwargs):
+    readings = []
+    exp_ranges = exp_range_for_pose(pose, range, radius, plot)
+    for exp_range in exp_ranges.values():
+        readings.append(to_IR(exp_range))
+    return readings
+
+
 
 def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
     '''accepts a pose containing x, y, and phi(heading),

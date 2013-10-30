@@ -1,9 +1,9 @@
 from robot import Robot
-from robot import Pose
 import sys
 import numpy as np
 import utils
 from utils import Point
+from utils import Pose
 import time
 import map
 import odometry
@@ -81,6 +81,14 @@ def cal_distances():
 
 def raycasting():
     raw_input('place the robot at the home position and press enter.')
+    print 'starting a raycasting simulation'
+    r = Robot()
+    while True:
+        r.update_data()
+        print r.data.sensor_values
+
+
+
 
 
 def new_odo():
