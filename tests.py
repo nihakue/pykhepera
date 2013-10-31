@@ -7,6 +7,7 @@ from utils import Pose
 import time
 import map
 import odometry
+import raycasting
 
 
 LOOP = [(560, 293), (916, 293),(1021, 476),
@@ -85,10 +86,44 @@ def raycasting():
     r = Robot()
     while True:
         r.update_data()
-        print r.data.sensor_values
 
 
+def distance_estimate():
+    sensor_num = raw_input('which sensor do you want to test?') or '3'
+    r = Robot()
+    while True:
+        r.update_data()
+        try:
+            reading = r.data.sensor_values[int(sensor_num)]
+        except IndexError:
+            print 'no data at that index'
+            continue
+        threshold = r.data.thresholds['sensor'+sensor_num]
+        dist = utils.estimated_distance(reading, threshold)
+        print '%.2f mm away on sensor %s' % (dist, sensor_num)
 
+
+def range_estimate():
+    r = Robot()
+    sensor_num = raw_input('which sensor do you want to test?') or '3'
+    while True:
+        real_distance = raw_input('how far away in mm are you from a wall?')
+        r.update_data()
+        try:
+            real_reading = r.data.sensor_values[int(sensor_num)]
+        except IndexError:
+            print 'no data at that index'
+            continue
+        threshold = r.data.thresholds['sensor'+sensor_num]
+        print threshold
+        guessed_reading = utils.estimated_reading(real_distance, threshold)
+        print 'guessed reading: %.2f real reading: %.2f error: %.2f' % (guessed_reading, real_reading, abs(guessed_reading-real_reading))
+
+
+def ir():
+    r = Robot()
+    while True:
+        print r.r.read_sensor_values()
 
 
 def new_odo():

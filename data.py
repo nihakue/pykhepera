@@ -1,4 +1,6 @@
 import numpy as np
+import json
+import time
 
 class Data(object):
     """Data model for sensor values, wheel and position
@@ -23,7 +25,7 @@ class Data(object):
     'sensor4': [0,0,0,0,0,0,0,0,0,0],
     'sensor5': [0,0,0,0,0,0,0,0,0,0],
     'sensor6': [0,0,0,0,0,0,0,0,0,0],
-    'sensor7': [0,0,0,0,0,0,0,0,0,0]    
+    'sensor7': [0,0,0,0,0,0,0,0,0,0]
     }
 
     def clear(self):
@@ -86,5 +88,25 @@ class Data(object):
     def theta(self, value):
         self._theta = value
 
+    def save_calibration(self, filename='distance_calibration.data'):
+        with open(filename, 'a') as out_file:
+            calibration_event = self.thresholds
+            calibration_event['day'] = time.localtime().tm_mday
+            d_out = json.dumps(calibration_event, sort_keys=True)
+            out_file.write(d_out)
+            out_file.write('\n')
+
+    def load_calibration(self, filename='distance_calibration.data'):
+        try:
+            with open(filename) as in_file:
+                for line in in_file:
+                    indata = json.loads(line)
+                    if indata['day'] == time.localtime().tm_mday:
+                        self.thresholds = indata
+                        break
+                else:
+                    print 'need new calibration data. please calibrate'
+        except IOError:
+            print 'no data_calibration file found. setting to defaults'
 
 

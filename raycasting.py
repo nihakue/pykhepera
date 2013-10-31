@@ -1,19 +1,21 @@
 from scipy import misc
 from collections import namedtuple
+from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.mlab import find as m_find
+import utils
 
 __arena = np.array([])
-__lidar = dict(
-             port=np.pi/2,
-             port_quarter = np.pi/4,
-             port_bow = 0,
-             stbd_bow = 0,
-             stbd_quarter = -np.pi/4,
-             stbd=-np.pi/2,
-             stbd_stern = np.pi,
-             port_stern = np.pi)
+__lidar = OrderedDict(
+             [('port', np.pi/2),
+             ('port_quarter', np.pi/4),
+             ('port_bow', 0),
+             ('stbd_bow', 0),
+             ('stbd_quarter', -np.pi/4),
+             ('stbd', -np.pi/2),
+             ('stbd_stern', np.pi),
+             ('port_stern', np.pi)])
 
 
 def load_arena():
@@ -25,20 +27,27 @@ def to_IR(distance):
     pass
 
 
-def exp_readings_for_pose(pose, kwargs):
-    readings = []
-    exp_ranges = exp_range_for_pose(pose, range, radius, plot)
-    for exp_range in exp_ranges.values():
-        readings.append(to_IR(exp_range))
+def exp_readings_for_pose(pose, thresholds, ir_range=100,
+                          radius=26.5, plot=False):
+    sorted_keys = thresholds.keys()
+    sorted_keys.sort()
+    thresholds_s = [thresholds[key] for key in sorted_keys
+                    if 'sensor' in key]
+    exp_ds = exp_distances_for_pose(pose, ir_range, radius, plot)
+    print 'expected distances: ', exp_ds
+    readings = [utils.estimated_reading(d, t)
+                for d, t in zip(exp_ds, thresholds_s)]
+
     return readings
 
 
 
-def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
+
+def exp_distances_for_pose(pose, ir_range=100, radius=26.5, plot=False):
     '''accepts a pose containing x, y, and phi(heading),
     uses raycasting to determine the nearest obstacles, and returns
     the distance to those obstacles.
-    optional lidar range and robot radius'''
+    optional lidar ir_range and robot radius'''
     global __arena
     global __lidar
 
@@ -50,7 +59,9 @@ def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
         plt.xlim(-5, np.size(__arena, axis=1))
         plt.ylim(-5, np.size(__arena, axis=0))
 
-    lidar_range = {}
+    lidar_range = [999, 999, 999, 999, 999, 999, 999, 999]
+    i = 0
+    dist = 999
     for laser, theta in __lidar.iteritems():
         phi = pose.theta + theta
         offset = phi
@@ -67,7 +78,7 @@ def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
             else:
                 offset += np.deg2rad(-bow_stern_offset)
 
-        r = np.linspace(0, range, 1000)
+        r = np.linspace(0, ir_range, 1000)
         x_offset = radius*np.cos(offset)
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
@@ -101,9 +112,11 @@ def exp_range_for_pose(pose, range=100, radius=26.5, plot=False):
                 robot_circle = plt.Circle((pose.x, pose.y),
                                           radius=radius, color='g')
                 plt.gca().add_artist(robot_circle)
-            dist = np.sqrt((pose.x - xb)**2 + (pose.y - yb)**2)
-            #update the range dictionary
-            lidar_range[laser] = dist
+            dist = np.sqrt((pose.x - xb)**2 + (pose.y - yb)**2) - radius
+            #update the ir_range dictionary
+            lidar_range[i] = dist
+
+        i += 1
     return lidar_range
 
 if __name__ == '__main__':

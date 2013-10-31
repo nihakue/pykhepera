@@ -28,3 +28,8 @@ TO DO:
 	Particle filter! --- Both
 	Raycasting/simulation for expected ---Gabe 
 	detect found food function (done, should improve?) ---Andres
+
+particle filter notes:
+	
+	start with a broad normal distribution to avoid a false sense of accuracy
+	The error on our estimated range function is somewhere around 10 :(

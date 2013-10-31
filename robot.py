@@ -7,7 +7,7 @@ import numpy as np
 import pdb
 import utils
 from particle_filter import ParticleFilter
-import json
+
 
 
 class Robot(object):
@@ -27,20 +27,7 @@ class Robot(object):
         self.pose = utils.home_pose
         self.particle_filter = ParticleFilter(num_particles,
                                               self.pose, self.data)
-        self.load_thresholds('distance_calibration.data')
-
-    def load_thresholds(self, filename):
-        try:
-            with open(filename) as in_file:
-                for line in in_file:
-                    indata = json.loads(line)
-                    if indata['day'] == time.localtime().tm_mday:
-                        self.data.thresholds = indata
-                    else:
-                        print 'need new calibration data. please calibrate'
-        except IOError:
-            print 'no data_calibration file found. setting to defaults'
-
+        self.data.load_calibration()
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
@@ -183,11 +170,9 @@ class Robot(object):
         for i in range(8):
             sensor = 'sensor'+str(i)
             self.data.thresholds[sensor] = readings[i]
-        with open('distance_calibration.data', 'a') as out_file:
-            calibration_event = self.data.thresholds
-            calibration_event['day'] = time.localtime().tm_mday
-            f_out = json.dumps(calibration_event)
-            out_file.write(f_out)
+        print self.data.thresholds
+        self.data.save_calibration()
+
 
 
     def update_plot(self):

@@ -78,21 +78,52 @@ def mm_between(destination, origin):
     mm_distance = np.linalg.norm(destination_vector)
     return mm_distance
 
+
 def estimated_distance(reading, threshold):
-    i = 1
-    while threshold[i] > reading:
-        i += 1
-    rang = float(threshold[i-1]-threshold[i])
-    pos = float(reading-threshold[i])
-    n = float(i-1)
-    return n+(pos/rang)
+    upper, lower = reverse_insort(threshold, reading)
+    rang = float(threshold[upper] - threshold[lower])
+    pos = -float(reading-threshold[lower])
+    print upper, lower
+    print pos, rang
+    return (upper + 1 + (pos/rang)) * 10
+
 
 def estimated_reading(distance, threshold):
-    up = threshold[int(distance)]
-    down = threshold[int(distance+1)]
-    read = (distance-int(distance))*(up-down)
-    return down+read
-    pass
+    df = float(distance)/10.
+    if df >= 9:
+        return 1
+    di = int(distance)/10
+    # read = (distance-int(distance))*(down-up)
+    up = threshold[di]
+    down = threshold[di + 1]
+    read = (df - di) * (up-down)
+    print df, di
+    print up, down, read
+    return down + read
+
+
+def reverse_insort(a, x, lo=0, hi=None):
+    """return the indexes that would be to the left and right of item x,
+    if x were bisected into the list
+
+    If x is already in a, return x as the left
+
+    Optional args lo (default 0) and hi (default len(a)) bound the
+    slice of a to be searched.
+    """
+    if lo < 0:
+        raise ValueError('lo must be non-negative')
+    if hi is None:
+        hi = len(a)
+    while lo < hi:
+        mid = (lo+hi)//2
+        if x > a[mid]:
+            hi = mid
+        else: lo = mid+1
+    if lo >= len(a):
+        return len(a) - 2, len(a) - 1
+    return lo-1, lo
+
 
 def get_omega(wheel_speeds):
     vl, vr = wheel_speeds
