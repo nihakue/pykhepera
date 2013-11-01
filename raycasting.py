@@ -29,15 +29,16 @@ def to_IR(distance):
 
 def exp_readings_for_pose(pose, thresholds, ir_range=100,
                           radius=26.5, plot=False):
-    sorted_keys = thresholds.keys()
-    sorted_keys.sort()
-    thresholds_s = [thresholds[key] for key in sorted_keys
-                    if 'sensor' in key]
+    if type(thresholds) is list:
+        thresholds_s = thresholds
+    else:
+        sorted_keys = thresholds.keys()
+        sorted_keys.sort()
+        thresholds_s = [thresholds[key] for key in sorted_keys
+                       if 'sensor' in key]
     exp_ds = exp_distances_for_pose(pose, ir_range, radius, plot)
-    print 'expected distances: ', exp_ds
     readings = [utils.estimated_reading(d, t)
                 for d, t in zip(exp_ds, thresholds_s)]
-
     return readings
 
 

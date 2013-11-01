@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import time
+from collections import OrderedDict
 
 class Data(object):
     """Data model for sensor values, wheel and position
@@ -14,19 +15,19 @@ class Data(object):
     _wheel_speeds = [0, 0]
     _theta = np.pi/2
 
-    _thresholds = {
-    'max_ir_reading': 120, # This represents the min distance
-    'wall_max': 250,
-    'wall_min': 20,
-    'sensor0': [0,0,0,0,0,0,0,0,0,0],
-    'sensor1': [0,0,0,0,0,0,0,0,0,0],
-    'sensor2': [0,0,0,0,0,0,0,0,0,0],
-    'sensor3': [0,0,0,0,0,0,0,0,0,0],
-    'sensor4': [0,0,0,0,0,0,0,0,0,0],
-    'sensor5': [0,0,0,0,0,0,0,0,0,0],
-    'sensor6': [0,0,0,0,0,0,0,0,0,0],
-    'sensor7': [0,0,0,0,0,0,0,0,0,0]
-    }
+    _thresholds = OrderedDict([
+    ('max_ir_reading', 120), # This represents the min distance
+    ('wall_max', 250),
+    ('wall_min', 20),
+    ('sensor0', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor1', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor2', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor3', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor4', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor5', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor6', [0,0,0,0,0,0,0,0,0,0]),
+    ('sensor7', [0,0,0,0,0,0,0,0,0,0])
+    ])
 
     def clear(self):
         self._x_positions = [0]
@@ -52,6 +53,10 @@ class Data(object):
     @thresholds.setter
     def thresholds(self, value):
         self._thresholds = value
+
+    def distance_thresholds(self):
+        return [val for key, val
+                in self._thresholds.items() if 'sensor' in key]
 
     @property
     def x_positions(self):
@@ -101,7 +106,8 @@ class Data(object):
             with open(filename) as in_file:
                 for line in in_file:
                     indata = json.loads(line)
-                    if indata['day'] == time.localtime().tm_mday:
+                    # if indata['day'] == time.localtime().tm_mday:
+                    if indata['day'] == 30:
                         self.thresholds = indata
                         break
                 else:
