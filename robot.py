@@ -34,66 +34,6 @@ class Robot(object):
         # self.data.wheel_speeds = self.r.read_wheel_speeds()
         self.data.wheel_values = self.r.read_wheel_values()
 
-    # def get_omega(self):
-    #     vl, vr = self.data.wheel_speeds
-    #     if vr == vl:
-    #         return 0
-    #     omega = ((vr - vl)/self.axel_l)
-    #     return omega
-
-    # def get_R(self):
-    #     vl, vr = self.data.wheel_speeds
-    #     if vl == vr:
-    #         return 0
-    #     R = (self.axel_l/2) * ((vl + vr)/(vr - vl))
-    #     return R
-
-    # def get_ICC(self):
-    #     x = self.data.x_positions[-1]
-    #     y = self.data.y_positions[-1]
-    #     R = self.get_R()
-    #     theta = self.data.theta
-
-    #     ICC = ((x - (R * np.sin(theta))), (y + (R * np.cos(theta))))
-    #     return ICC
-
-    # def update_pose(self, dt):
-    #     x = self.data.x_positions[-1]
-    #     y = self.data.y_positions[-1]
-    #     theta = self.data.theta
-
-    #     vl, vr = self.data.wheel_speeds
-    #     if vl == vr:
-    #         pose = (np.array([x, y, theta]))
-    #         translation = np.array([vl*np.cos(theta) * dt,
-    #                                vl*np.sin(theta) * dt, 0])
-    #         pose = pose + translation
-    #     else:
-    #         ICC = self.get_ICC()
-    #         ICCx = ICC[0]
-    #         ICCy = ICC[1]
-    #         omega = self.get_omega()
-
-    #         rotation_matrix = np.array(
-    #             [
-    #             [np.cos(omega * dt), -np.sin(omega*dt), 0],
-    #             [np.sin(omega * dt), np.cos(omega * dt), 0],
-    #             [0,                  0,                  1]
-    #             ])
-
-    #         ICC_vector = np.array([x - ICCx, y-ICCy, theta])
-
-    #         reposition_vector = np.array([ICCx, ICCy, omega * dt])
-
-    #         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
-
-    #     self.data.x_positions.append(pose[0])
-    #     self.data.y_positions.append(pose[1])
-    #     self.data.theta = pose[2]
-    #     self.pose.x = pose[0]
-    #     self.pose.y = pose[1]
-    #     self.pose.theta = pose[2]
-
     def calibrate_min(self):
         self.r.reset_wheel_counters()
         self.update_data()
@@ -125,6 +65,19 @@ class Robot(object):
             fout.write('\n')
             fout.close()
 
+    def largest_reading(self, sensor_i, duration=2, sample_rate=.5):
+        self.update_data()
+        max_reading = self.data.sensor_values[sensor_i]
+        for i in range(int(duration/sample_rate)):
+            self.update_data()
+            if self.data.sensor_values[sensor_i] > max_reading:
+                max_reading = self.data.sensor_values[sensor_i]
+            print 'reading: ', self.data.sensor_values[sensor_i]
+            time.sleep(sample_rate)
+        print 'max_reading for %d: %d' % (sensor_i, max_reading)
+        return max_reading
+
+
     def calibrate_distances(self):
         readings = []
         for i in range(8):
@@ -133,40 +86,28 @@ class Robot(object):
         self.update_data()
         par = -1
         for a in range(10):
-            self.update_data()
-            time.sleep(0.3)
-            readings[6].append(self.data.sensor_values[6])
-            readings[7].append(self.data.sensor_values[7])
+            readings[6].append(self.largest_reading(6))
+            readings[7].append(self.largest_reading(7))
             self.r.rotate(par * np.pi/2)
-            time.sleep(0.8)
-            self.update_data()
             time.sleep(0.3)
-            readings[0].append(self.data.sensor_values[0])
+            readings[0].append(self.largest_reading(0))
             self.r.rotate(par * np.pi/4)
-            time.sleep(0.8)
-            self.update_data()
             time.sleep(0.3)
-            readings[1].append(self.data.sensor_values[1])
+            readings[1].append(self.largest_reading(1))
             self.r.rotate(par * np.pi/4)
-            time.sleep(0.8)
-            self.update_data()
             time.sleep(0.3)
-            readings[2].append(self.data.sensor_values[2])
-            readings[3].append(self.data.sensor_values[3])
+            readings[2].append(self.largest_reading(2))
+            readings[3].append(self.largest_reading(3))
             self.r.rotate(par * np.pi/4)
-            time.sleep(0.8)
-            self.update_data()
             time.sleep(0.3)
-            readings[4].append(self.data.sensor_values[4])
+            readings[4].append(self.largest_reading(4))
             self.r.rotate(par * np.pi/4)
-            time.sleep(0.8)
-            self.update_data()
             time.sleep(0.3)
-            readings[5].append(self.data.sensor_values[5])
+            readings[5].append(self.largest_reading(5))
             self.r.rotate(par * np.pi/2)
-            time.sleep(1.5)
+            time.sleep(0.3)
             self.r.travel(utils.to_wu(10))
-            time.sleep(0.8)
+            time.sleep(1)
         for i in range(8):
             sensor = 'sensor'+str(i)
             self.data.thresholds[sensor] = readings[i]
