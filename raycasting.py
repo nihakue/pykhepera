@@ -20,7 +20,8 @@ __lidar = OrderedDict(
 
 def load_arena():
     global __arena
-    __arena = np.flipud(misc.imread('arena.bmp'))
+    if not __arena.any():
+        __arena = np.flipud(misc.imread('arena.bmp'))
 
 
 def to_IR(distance):
@@ -52,8 +53,7 @@ def exp_distances_for_pose(pose, ir_range=100, radius=26.5, plot=False):
     global __arena
     global __lidar
 
-    if not __arena.any():
-        load_arena()
+    load_arena()
     if plot:
         plt.ion()
         plt.imshow(__arena, origin='lower')

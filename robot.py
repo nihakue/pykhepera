@@ -1,33 +1,37 @@
 import pykhepera, behaviors
 from data import Data
 import time
+import threading
 import matplotlib.pyplot as plt
 import raycasting
 import numpy as np
-import pdb
 import utils
 from particle_filter import ParticleFilter
-
 
 
 class Robot(object):
     '''This is the logic/execution module for the pykhepera robot. It handles the high level functions such as reloading the robot, controlling the robot, etc.
     '''
-    def __init__(self, num_particles=100):
+    def __init__(self, num_particles=100, plotting=False):
         super(Robot, self).__init__()
         self.data = Data()
-        plt.ion()
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        self.ax.axis([-1000, 1000, -1000, 1000])
-        self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
-        self.r = pykhepera.PyKhepera()
+        self.plotting = plotting
+        # self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0  # self.axis length in mm
         self.data.clear()
         self.pose = utils.home_pose
         self.particle_filter = ParticleFilter(num_particles,
                                               self.pose, self.data)
         self.data.load_calibration()
+        if self.plotting:
+            plt.ion()
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(1, 1, 1)
+            self.ax.axis([-1000, 1000, -1000, 1000])
+            self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
+            self.plotting_thread = threading.Thread(target=self.update_plot)
+            self.plotting_thread.daemon = True
+            self.plotting_thread.start()
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
@@ -173,14 +177,15 @@ class Robot(object):
         print self.data.thresholds
         self.data.save_calibration()
 
-
-
     def update_plot(self):
-        self.line.set_xdata(self.data.x_positions +
-                            self.particle_filter.get_x())
-        self.line.set_ydata(self.data.y_positions +
-                            self.particle_filter.get_y())
-        self.fig.canvas.draw()
+        while self.plotting:
+            print 'plotting...'
+            self.line.set_xdata(self.data.x_positions +
+                                self.particle_filter.get_x())
+            self.line.set_ydata(self.data.y_positions +
+                                self.particle_filter.get_y())
+            self.fig.canvas.draw()
+            time.sleep(.2)
 
     def will_collide(self):
         for val in self.data.sensor_values[1:5]:
@@ -204,13 +209,6 @@ class Robot(object):
         self.data.y_positions.append(self.pose.y)
         self.data.theta = self.pose.theta
         self.particle_filter.update(dt)
-        self.update_plot()
-        # self.update_expectations(dt)
-
-    def update_expectations(self, dt):
-        self.lidar_range = raycasting.exp_range_for_pose(self.pose,
-                                                         plot=True)
-
 
     def food_found(self):
         # m = 0
