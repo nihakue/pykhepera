@@ -45,7 +45,7 @@ def exp_readings_for_pose(pose, thresholds, ir_range=100,
 
 
 
-def exp_distances_for_pose(pose, ir_range=100, radius=26.5, plot=False):
+def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
     '''accepts a pose containing x, y, and phi(heading),
     uses raycasting to determine the nearest obstacles, and returns
     the distance to those obstacles.
@@ -79,22 +79,22 @@ def exp_distances_for_pose(pose, ir_range=100, radius=26.5, plot=False):
             else:
                 offset += np.deg2rad(-bow_stern_offset)
 
-        r = np.linspace(0, ir_range, 1000)
+        r = np.linspace(0, ir_range, 10)
         x_offset = radius*np.cos(offset)
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
         y = pose.y + y_offset + (r*np.sin(phi))
         #remove out of bounds points
-        temp = []
-        it = np.nditer(x, flags=['f_index'])
-        while not it.finished:
-            if (x[it.index] > np.size(__arena, axis=1)
-                or y[it.index] > np.size(__arena, axis=0)
-                or x[it.index] <= 0 or y[it.index] <= 0):
-                temp.append(it.index)
-            it.iternext()
-        x[temp] = []
-        y[temp] = []
+        # temp = []
+        # it = np.nditer(x, flags=['f_index'])
+        # while not it.finished:
+        #     if (x[it.index] > np.size(__arena, axis=0)
+        #         or y[it.index] > np.size(__arena, axis=1)
+        #         or x[it.index] <= 0 or y[it.index] <= 0):
+        #         temp.append(it.index)
+        #     it.iternext()
+        # x[temp] = []
+        # y[temp] = []
         if plot:
             plt.plot(x, y, 'r')
         #computing intersections

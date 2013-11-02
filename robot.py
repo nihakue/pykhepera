@@ -3,6 +3,7 @@ from data import Data
 import time
 import threading
 import matplotlib.pyplot as plt
+from scipy import misc
 import raycasting
 import numpy as np
 import utils
@@ -16,7 +17,7 @@ class Robot(object):
         super(Robot, self).__init__()
         self.data = Data()
         self.plotting = plotting
-        # self.r = pykhepera.PyKhepera()
+        self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0  # self.axis length in mm
         self.data.clear()
         self.pose = utils.home_pose
@@ -24,14 +25,21 @@ class Robot(object):
                                               self.pose, self.data)
         self.data.load_calibration()
         if self.plotting:
-            plt.ion()
-            self.fig = plt.figure()
-            self.ax = self.fig.add_subplot(1, 1, 1)
-            self.ax.axis([-1000, 1000, -1000, 1000])
-            self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
-            self.plotting_thread = threading.Thread(target=self.update_plot)
-            self.plotting_thread.daemon = True
-            self.plotting_thread.start()
+            self.init_plotting()
+
+    def init_plotting(self):
+        plt.ion()
+        self.fig = plt.figure(figsize=(16, 12))
+        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.ax.axis([0,1469, 0, 962])
+        self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
+        self.p_lines, = self.ax.plot(self.particle_filter.get_x(),
+                                     self.particle_filter.get_y(), 'r.')
+        self.im = np.flipud(misc.imread('arena.bmp'))
+        plt.imshow(self.im, origin='lower')
+        self.plotting_thread = threading.Thread(target=self.update_plot)
+        self.plotting_thread.daemon = True
+        self.plotting_thread.start()
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
@@ -120,13 +128,12 @@ class Robot(object):
 
     def update_plot(self):
         while self.plotting:
-            print 'plotting...'
-            self.line.set_xdata(self.data.x_positions +
-                                self.particle_filter.get_x())
-            self.line.set_ydata(self.data.y_positions +
-                                self.particle_filter.get_y())
-            self.fig.canvas.draw()
-            time.sleep(.2)
+            self.line.set_xdata(self.data.x_positions)
+            self.line.set_ydata(self.data.y_positions)
+            self.p_lines.set_xdata(self.particle_filter.get_x())
+            self.p_lines.set_ydata(self.particle_filter.get_y())
+
+            time.sleep(.5)
 
     def will_collide(self):
         for val in self.data.sensor_values[1:5]:
@@ -150,6 +157,8 @@ class Robot(object):
         self.data.y_positions.append(self.pose.y)
         self.data.theta = self.pose.theta
         self.particle_filter.update(dt)
+        if self.plotting:
+            self.fig.canvas.draw()
 
     def food_found(self):
         # m = 0

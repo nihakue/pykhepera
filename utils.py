@@ -1,5 +1,6 @@
 import numpy as np
 import pdb
+from collections import namedtuple
 
 class Pose(object):
     """Robot's pose in the real world. x and y in mm, theta in radians"""
@@ -8,6 +9,11 @@ class Pose(object):
         self.x = x
         self.y = y
         self.theta = theta
+
+    def arr(self):
+        return np.array([self.x, self.y, self.theta])
+
+Particle = namedtuple('Particle', 'x, y, theta, w')
 
 class Point(object):
     """This is a point in the x y plane"""
@@ -83,8 +89,6 @@ def estimated_distance(reading, threshold):
     upper, lower = reverse_insort(threshold, reading)
     rang = float(threshold[upper] - threshold[lower])
     pos = -float(reading-threshold[lower])
-    print upper, lower
-    print pos, rang
     return (upper + 1 + (pos/rang)) * 10
 
 
@@ -97,9 +101,7 @@ def estimated_reading(distance, threshold):
     up = threshold[di]
     down = threshold[di + 1]
     read = (df - di) * (up-down)
-    print df, di
-    print up, down, read
-    return down + read
+    return int(down + read)
 
 
 def reverse_insort(a, x, lo=0, hi=None):
@@ -150,7 +152,7 @@ def get_ICC(pose, wheel_speeds):
     return ICC
 
 
-def update_pose(start_pose, wheel_speeds, dt):
+def update_pose(start_pose, wheel_speeds, dt, noisy=False):
     x = start_pose.x
     y = start_pose.y
     theta = start_pose.theta
@@ -180,6 +182,16 @@ def update_pose(start_pose, wheel_speeds, dt):
 
         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
 
-    new_pose = Pose(pose[0], pose[1], pose[2])
+    if noisy:
+        pose = pose + gauss(2, np.pi/16)
+    if 'Particle' in str(type(start_pose)):
+        new_pose = Particle(pose[0], pose[1], pose[2], start_pose.w)
+    else:
+        new_pose = Pose(pose[0], pose[1], pose[2])
     return new_pose
+
+def gauss(scale, theta_scale):
+        xy = np.random.normal(0, scale, 2)
+        theta = np.random.normal(0, theta_scale, 1)
+        return np.append(xy, theta)
 

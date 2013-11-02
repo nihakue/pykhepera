@@ -10,8 +10,8 @@ class Data(object):
     _sensor_values = [0,0,0,0,0,0,0,0]
     _wheel_values = [0, 0]
     _wheel_delta = [0,0]
-    _x_positions = [0]
-    _y_positions = [0]
+    _x_positions = []
+    _y_positions = []
     _wheel_speeds = [0, 0]
     _theta = np.pi/2
 
@@ -28,6 +28,8 @@ class Data(object):
     ('sensor6', [0,0,0,0,0,0,0,0,0,0]),
     ('sensor7', [0,0,0,0,0,0,0,0,0,0])
     ])
+
+    _distance_thresholds = []
 
     def clear(self):
         self._x_positions = [0]
@@ -54,9 +56,12 @@ class Data(object):
     def thresholds(self, value):
         self._thresholds = value
 
+    @property
     def distance_thresholds(self):
-        return [val for key, val
+        if not self._distance_thresholds:
+            self._distance_thresholds = [val for key, val
                 in self._thresholds.items() if 'sensor' in key]
+        return self._distance_thresholds
 
     @property
     def x_positions(self):
@@ -104,14 +109,17 @@ class Data(object):
     def load_calibration(self, filename='distance_calibration.data'):
         try:
             with open(filename) as in_file:
-                for line in in_file:
+                calibs = [line for line in in_file]
+                for line in calibs:
                     indata = json.loads(line)
                     # if indata['day'] == time.localtime().tm_mday:
-                    if indata['day'] == 30:
+                    if indata['day'] == time.localtime().tm_mday:
                         self.thresholds = indata
                         break
                 else:
                     print 'need new calibration data. please calibrate'
+                    self.thresholds = json.loads(calibs[-1])
+
         except IOError:
             print 'no data_calibration file found. setting to defaults'
 

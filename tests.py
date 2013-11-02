@@ -87,7 +87,7 @@ def raycasting():
     while True:
         r.update_data()
         real_readings = np.array(r.data.sensor_values)
-        ray_readings = raycasting.exp_reading_for_pose(r.pose, r.distance_thresholds())
+        ray_readings = raycasting.exp_reading_for_pose(r.pose, r.distance_thresholds)
         ray_readings = np.array(ray_readings)
         print 'ray readings: %s real readings: %s errors: %s' % (ray_readings, real_readings, abs(real_readings-ray_readings))
 

@@ -34,9 +34,6 @@ class PyKhepera():
                 print response
             response = self.ser.readline()
 
-    def read_array(self):
-        pass
-
     def kill(self):
         self.ser.close()
         print 'serial comm stopped'
