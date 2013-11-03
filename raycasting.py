@@ -21,14 +21,14 @@ __lidar = OrderedDict(
 def load_arena():
     global __arena
     if not __arena.any():
-        __arena = np.flipud(misc.imread('arena.bmp'))
+        __arena = np.flipud(misc.imread('arena.bmp')).T
 
 
 def to_IR(distance):
     pass
 
 
-def exp_readings_for_pose(pose, thresholds, ir_range=100,
+def exp_readings_for_pose(pose, thresholds, ir_range=80,
                           radius=26.5, plot=False):
     if type(thresholds) is list:
         thresholds_s = thresholds
@@ -41,8 +41,6 @@ def exp_readings_for_pose(pose, thresholds, ir_range=100,
     readings = [utils.estimated_reading(d, t)
                 for d, t in zip(exp_ds, thresholds_s)]
     return readings
-
-
 
 
 def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
@@ -84,17 +82,17 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
         y = pose.y + y_offset + (r*np.sin(phi))
-        #remove out of bounds points
-        # temp = []
-        # it = np.nditer(x, flags=['f_index'])
-        # while not it.finished:
-        #     if (x[it.index] > np.size(__arena, axis=0)
-        #         or y[it.index] > np.size(__arena, axis=1)
-        #         or x[it.index] <= 0 or y[it.index] <= 0):
-        #         temp.append(it.index)
-        #     it.iternext()
-        # x[temp] = []
-        # y[temp] = []
+        # remove out of bounds points
+        temp = []
+        it = np.nditer(x, flags=['f_index'])
+        while not it.finished:
+            if (x[it.index] > np.size(__arena, axis=0)
+                or y[it.index] > np.size(__arena, axis=1)
+                or x[it.index] <= 0 or y[it.index] <= 0):
+                temp.append(it.index)
+            it.iternext()
+        x[temp] = []
+        y[temp] = []
         if plot:
             plt.plot(x, y, 'r')
         #computing intersections
@@ -103,7 +101,10 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
         #Correcting zero map indexing
         xint2 = [1 if a==0 else a for a in xint]
         yint2 = [1 if b==0 else b for b in yint]
-        b = [__arena[yint2[j],xint2[j]] for j in xrange(len(xint2))]
+        b = [__arena[xint2[j],yint2[j]]
+            for j in xrange(len(xint2))
+            if xint2[j] < __arena.shape[0]
+            and yint2[j] < __arena.shape[1]]
         indices = m_find(np.ravel(b) == 1)
         if indices.any():
             xb = x[indices[0]]
