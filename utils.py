@@ -2,10 +2,10 @@ import numpy as np
 import pdb
 from collections import namedtuple
 
+
 class Pose(object):
     """Robot's pose in the real world. x and y in mm, theta in radians"""
     def __init__(self, x=0, y=0, theta=0):
-        super(Pose, self).__init__()
         self.x = x
         self.y = y
         self.theta = theta
@@ -13,7 +13,13 @@ class Pose(object):
     def arr(self):
         return np.array([self.x, self.y, self.theta])
 
-Particle = namedtuple('Particle', 'x, y, theta, w')
+
+class Particle(Pose):
+    """just a pose with a weight"""
+    def __init__(self, x=0, y=0, theta=0, w=0.01):
+        super(Particle, self).__init__(x, y, theta)
+        self.w = w
+
 
 class Point(object):
     """This is a point in the x y plane"""
@@ -26,7 +32,7 @@ class Point(object):
         return "POINT"
 
 home_position = Point(x=503, y=484)
-home_pose = Pose(x=503, y=484, theta=np.pi/2)
+home_pose = Pose(x=503, y=484, theta=0)
 axel_l = 53.0
 
 def to_mm(wheel_value):
@@ -95,13 +101,13 @@ def estimated_distance(reading, threshold):
 def estimated_reading(distance, threshold):
     df = float(distance)/10.
     if df >= 9:
-        return 1
+        return 30
     di = int(distance)/10
     # read = (distance-int(distance))*(down-up)
     up = threshold[di]
     down = threshold[di + 1]
     read = (df - di) * (up-down)
-    return int(down + read)
+    return int(up - read)
 
 
 def reverse_insort(a, x, lo=0, hi=None):
@@ -183,8 +189,8 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
 
     if noisy:
-        pose = pose + gauss(2, np.pi/16)
-    if 'Particle' in str(type(start_pose)):
+        pose = pose + gauss(2, np.pi/32)
+    if type(start_pose) is Particle:
         new_pose = Particle(pose[0], pose[1], pose[2], start_pose.w)
     else:
         new_pose = Pose(pose[0], pose[1], pose[2])
