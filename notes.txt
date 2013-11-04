@@ -23,10 +23,10 @@ CALIBRATION done. Method: take the readings for all the sensors in distances 0 t
 TO DO:
 	Better callibration for distances (calibrate what does 10 mm look like), etc ---Andres (done, see notes above)
 	build map ---Gabe (done)
-	function to map IR readings to real distances given calibration data ---Gabe
+	function to map IR readings to real distances given calibration data ---done
 	A* algorithm ---Andres (done, in map.py)
-	Particle filter! --- Both
-	Raycasting/simulation for expected ---Gabe 
+	Particle filter! --- done (mostly working)
+	Raycasting/simulation for expected ---done
 	detect found food function (done, should improve?) ---Andres
 
 particle filter notes:

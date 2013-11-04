@@ -103,18 +103,20 @@ def estimated_distance(reading, threshold):
 
 
 def estimated_reading(distance, threshold):
-    df = float(distance)/10.
-    if df >= 8:
-        return 40
-    di = int(distance)/10
-    # read = (distance-int(distance))*(down-up)
-    up = threshold[di]
-    down = threshold[di + 1]
-    read = (df - di) * (up-down)
-    # if di < 3:
-    #     read = (df - di) * (up-down) * (up-down)
-    return int(up - read)
+    '''perform a lerp on the distance using calibrated thresholds.
+    distance should be in mm'''
+    x = float(distance)/10.
+    if x >= 7:
+        return threshold[7]
+    x0 = int(distance)/10
+    x1 = x0 + 1
+    y0 = threshold[x0]
+    y1 = threshold[x1]
+    return lerp(x, x0, x1, y0, y1)
 
+def lerp(x, x0, x1, y0, y1):
+    val = y0 + (y1 - y0) * ((x - x0)/(x1 - x0))
+    return type(y0)(val)
 
 def reverse_insort(a, x, lo=0, hi=None):
     """return the indexes that would be to the left and right of item x,

@@ -2,6 +2,7 @@ import numpy as np
 import json
 import time
 from collections import OrderedDict
+from utils import Particle
 
 class Data(object):
     """Data model for sensor values, wheel and position
@@ -14,6 +15,7 @@ class Data(object):
     _y_positions = []
     _wheel_speeds = [0, 0]
     _theta = np.pi/2
+    _pose = Particle()
 
     _thresholds = OrderedDict([
     ('max_ir_reading', 120), # This represents the min distance
@@ -34,6 +36,13 @@ class Data(object):
     def clear(self):
         self._x_positions = [0]
         self._y_positions = [0]
+
+    @property
+    def pose(self):
+        return self._pose
+    @pose.setter
+    def pose(self, value):
+        self._pose = value
 
     @property
     def sensor_values(self):
