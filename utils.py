@@ -20,6 +20,10 @@ class Particle(Pose):
         super(Particle, self).__init__(x, y, theta)
         self.w = w
 
+    def __eq__(self, other):
+        return (self.x == other.x
+        and self.y == other.y
+        and self.w == other.w)
 
 class Point(object):
     """This is a point in the x y plane"""
@@ -100,13 +104,15 @@ def estimated_distance(reading, threshold):
 
 def estimated_reading(distance, threshold):
     df = float(distance)/10.
-    if df >= 9:
-        return 30
+    if df >= 8:
+        return 40
     di = int(distance)/10
     # read = (distance-int(distance))*(down-up)
     up = threshold[di]
     down = threshold[di + 1]
     read = (df - di) * (up-down)
+    # if di < 3:
+    #     read = (df - di) * (up-down) * (up-down)
     return int(up - read)
 
 
@@ -189,7 +195,7 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
 
     if noisy:
-        pose = pose + gauss(2, np.pi/32)
+        pose = pose + gauss(1, np.pi/16)
     if type(start_pose) is Particle:
         new_pose = Particle(pose[0], pose[1], pose[2], start_pose.w)
     else:

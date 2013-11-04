@@ -106,7 +106,7 @@ class PyKhepera():
             omega = self.to_wu((self.diameter/2) * rotation)
         desired_wv = [int(current_wv[0] + omega),
             int(current_wv[1] - omega)]
-
+        print 'rotating: ', desired_wv
         self.set_values('C', desired_wv)
 
     def set_values(self, command, args, verbose=False):

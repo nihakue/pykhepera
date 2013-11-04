@@ -58,7 +58,7 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
         plt.xlim(-5, np.size(__arena, axis=1))
         plt.ylim(-5, np.size(__arena, axis=0))
 
-    lidar_range = [999, 999, 999, 999, 999, 999, 999, 999]
+    lidar_range = [40, 40, 40, 40, 40, 40, 40, 40]
     i = 0
     dist = 999
     for laser, theta in __lidar.iteritems():

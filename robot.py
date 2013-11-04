@@ -20,9 +20,12 @@ class Robot(object):
         self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0  # self.axis length in mm
         self.data.clear()
-        self.pose = utils.home_pose
+        self.data.pose = utils.Particle(utils.home_pose.x,
+                                        utils.home_pose.y,
+                                        utils.home_pose.theta, 0.5)
+        self.ppose = utils.home_pose
         self.particle_filter = ParticleFilter(num_particles,
-                                              self.pose, self.data)
+                                              self.data.pose, self.data)
         self.data.load_calibration()
         if self.plotting:
             self.init_plotting()
@@ -35,6 +38,7 @@ class Robot(object):
         self.line, = self.ax.plot(self.data.x_positions, self.data.y_positions)
         self.p_lines, = self.ax.plot(self.particle_filter.get_x(),
                                      self.particle_filter.get_y(), 'r.')
+        self.ppose_lines, = self.ax.plot(self.ppose.x, self.ppose.y, 'go')
         self.im = np.flipud(misc.imread('arena.bmp'))
         plt.imshow(self.im, origin='lower')
         self.plotting_thread = threading.Thread(target=self.update_plot)
@@ -77,7 +81,7 @@ class Robot(object):
             fout.write('\n')
             fout.close()
 
-    def largest_reading(self, sensor_i, duration=2, sample_rate=.5):
+    def largest_reading(self, sensor_i, duration=1, sample_rate=.5):
         self.update_data()
         max_reading = self.data.sensor_values[sensor_i]
         for i in range(int(duration/sample_rate)):
@@ -90,18 +94,19 @@ class Robot(object):
         return max_reading
 
 
-    def calibrate_distances(self):
+    def calibrate_distances(self, closest=2, furthest=4):
         readings = []
-        for i in range(8):
+        for i in range(9):
             aux = []
             readings.append(aux)
         self.update_data()
         par = -1
-        for a in range(10):
+        for a in range(9):
+            self.r.set_values('G', [0, 0])
             readings[6].append(self.largest_reading(6))
             readings[7].append(self.largest_reading(7))
             self.r.rotate(par * np.pi/2)
-            time.sleep(0.3)
+            time.sleep(1)
             readings[0].append(self.largest_reading(0))
             self.r.rotate(par * np.pi/4)
             time.sleep(0.3)
@@ -116,14 +121,18 @@ class Robot(object):
             self.r.rotate(par * np.pi/4)
             time.sleep(0.3)
             readings[5].append(self.largest_reading(5))
-            self.r.rotate(par * np.pi/2)
-            time.sleep(0.3)
+            self.r.set_values('C', [0, 0])
+            time.sleep(3)
             self.r.travel(utils.to_wu(10))
             time.sleep(1)
         for i in range(8):
             sensor = 'sensor'+str(i)
             self.data.thresholds[sensor] = readings[i]
-        print self.data.thresholds
+        # print self.data.thresholds
+        # avg_max = sum(r[closest] for r in self.data.distance_thresholds)/len(self.data.distance_thresholds)
+        # avg_min = sum(r[furthest] for r in self.data.distance_thresholds)/len(self.data.distance_thresholds)
+        # self.data.thresholds['max_ir_reading'] = avg_max
+        # self.data.thresholds['wall_min'] = avg_min
         self.data.save_calibration()
 
     def update_plot(self):
@@ -132,8 +141,9 @@ class Robot(object):
             self.line.set_ydata(self.data.y_positions)
             self.p_lines.set_xdata(self.particle_filter.get_x())
             self.p_lines.set_ydata(self.particle_filter.get_y())
-
-            time.sleep(.5)
+            self.ppose_lines.set_xdata(self.ppose.x)
+            self.ppose_lines.set_ydata(self.ppose.y)
+            time.sleep(.1)
 
     def will_collide(self):
         for val in self.data.sensor_values[1:5]:
@@ -152,22 +162,16 @@ class Robot(object):
 
     def update(self, dt):
         self.update_data()
-        self.pose = utils.update_pose(self.pose, self.data.wheel_speeds, dt)
-        self.data.x_positions.append(self.pose.x)
-        self.data.y_positions.append(self.pose.y)
-        self.data.theta = self.pose.theta
+        self.data.pose = utils.update_pose(self.data.pose, self.data.wheel_speeds, dt)
+        self.data.x_positions.append(self.data.pose.x)
+        self.data.y_positions.append(self.data.pose.y)
+        self.data.theta = self.data.pose.theta
         self.particle_filter.update(dt)
+        self.ppose = self.particle_filter.likliest
         if self.plotting:
             self.fig.canvas.draw()
 
     def food_found(self):
-        # m = 0
-        # for val in self.data.sensor_values:
-        #     m += val
-        # m = m/8
-        # print "media: ",str(m)
-        # if m < 100:
-        #     return False
         if len(self.data.sensor_values) == 0:
             return False
         for val in self.data.sensor_values:
@@ -249,5 +253,7 @@ class Robot(object):
             print 'killing and cleaning up'
             self.r.purge_buffer()
             self.led_state(0)
+            self.plotting = False
+            self.plotting_thread.join()
             self.r.stop()
             self.r.kill()

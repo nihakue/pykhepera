@@ -8,6 +8,7 @@ import time
 import map
 import odometry
 import raycasting
+import unittest
 
 
 LOOP = [(560, 293), (916, 293),(1021, 476),
@@ -106,7 +107,7 @@ def distance_estimate():
         print '%.2f mm away on sensor %s' % (dist, sensor_num)
 
 
-def range_estimate():
+def reading_estimate():
     r = Robot()
     sensor_num = raw_input('which sensor do you want to test?') or '3'
     while True:
@@ -118,10 +119,23 @@ def range_estimate():
             print 'no data at that index'
             continue
         threshold = r.data.thresholds['sensor'+sensor_num]
-        print threshold
         guessed_reading = utils.estimated_reading(real_distance, threshold)
         print 'guessed reading: %.2f real reading: %.2f error: %.2f' % (guessed_reading, real_reading, abs(guessed_reading-real_reading))
 
+class TestParticleFilter(unittest.TestCase):
+
+    def setUp(self):
+        print 'setting up'
+        self.r = Robot(num_particles=10)
+        for i in range(10):
+            self.r.update(1)
+
+    def test_sampling(self):
+        #Make sure the the weighted selection is the same size as the input
+        n = len(self.r.particle_filter.particles)
+        self.r.particle_filter.update(1)
+        d = len(self.r.particle_filter.particles)
+        self.assertEqual(n, d)
 
 def ir():
     r = Robot()
@@ -151,3 +165,6 @@ def new_odo():
     print 'current_pose: (x)%d, (y)%d, (theta)%.2f' % (current_pose.x,
                                                        current_pose.y,
                                                        current_pose.theta)
+
+if __name__ == '__main__':
+    unittest.main()
