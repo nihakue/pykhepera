@@ -15,6 +15,8 @@ class Robot(object):
     '''
     def __init__(self, num_particles=100, plotting=False):
         super(Robot, self).__init__()
+        self.found_food = False
+        self.carrying = 0
         self.data = Data()
         self.plotting = plotting
         self.r = pykhepera.PyKhepera()
@@ -27,6 +29,7 @@ class Robot(object):
         self.particle_filter = ParticleFilter(num_particles,
                                               self.data.pose, self.data)
         self.data.load_calibration()
+        self.speed_command = (0,0)
         if self.plotting:
             self.init_plotting()
 
@@ -47,7 +50,8 @@ class Robot(object):
 
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
-        # self.data.wheel_speeds = self.r.read_wheel_speeds()
+        wheel_speeds = self.r.read_wheel_speeds()
+        self.data.wheel_speeds = self.speed_command
         self.data.wheel_values = self.r.read_wheel_values()
 
     def calibrate_min(self):
@@ -92,7 +96,6 @@ class Robot(object):
             time.sleep(sample_rate)
         print 'max_reading for %d: %d' % (sensor_i, max_reading)
         return max_reading
-
 
     def calibrate_distances(self, closest=2, furthest=4):
         readings = []
@@ -167,24 +170,29 @@ class Robot(object):
         self.data.y_positions.append(self.data.pose.y)
         self.data.theta = self.data.pose.theta
         self.particle_filter.update(dt)
-        self.ppose = self.particle_filter.likliest
+        self.ppose = self.particle_filter.most_likely()
         if self.plotting:
             self.fig.canvas.draw()
 
-    def food_found(self):
+    def check_food(self):
         if len(self.data.sensor_values) == 0:
-            return False
+            return
         for val in self.data.sensor_values:
-            #if (((val-m) > 70) or ((val-m) < -70)):
             if val < 300:
-                return False
-        return True
+                return
+        else:
+            self.found_food = True
+            self.carrying += 1
 
+    def flash_leds(self):
+        for i in range(4):
+            self.led_state(3)
+            self.led_state(0)
 
     def run(self):
         obj_avoid = behaviors.ObjAvoid(self.data)
-        wall_follow = behaviors.WallFollow(self.data)
-        go_home = behaviors.GoHome(self.data)
+        # wall_follow = behaviors.WallFollow(self.data)
+        # go_home = behaviors.GoHome(self.data)
         last_time = time.time()
         time_up = False
         self.update_data()
@@ -195,15 +203,15 @@ class Robot(object):
                 #     time_up = True
                 #     if self.r.state is not 0:
                 #         self.r.state = 3
-
                 dt = (current_time - last_time)
                 last_time = time.time()
-                self.update(dt)
-                if self.food_found():
+                self.check_food()
+                if self.found_food:
                     print "fooooooood!!"
-                    speed = (0, 0)
-                    self.r.turn(speed)
-                    time.sleep(10)
+                    self.found_food = False
+                    self.r.stop()
+                    self.flash_leds()
+                self.update(dt)
                 speed = (0, 0)
                 vals = self.data.sensor_values
                 if self.r.state is 0:
@@ -212,7 +220,10 @@ class Robot(object):
                         speed = (0, 0)
                         self.r.state = 1
                     else:
-                        speed = (5, 5)
+                        if self.carrying:
+                            speed = (5, 5)
+                        else:
+                            speed = (5, 5)
                 if self.r.state is 1:
                     self.led_state(1)
                     speed = obj_avoid.step()
@@ -248,7 +259,7 @@ class Robot(object):
                     self.r.state = 0
                 if speed:
                     self.r.turn(speed)
-                    self.data.wheel_speeds = speed
+                    self.speed_command = speed
         except KeyboardInterrupt:
             print 'killing and cleaning up'
             self.r.purge_buffer()
@@ -257,3 +268,4 @@ class Robot(object):
             self.plotting_thread.join()
             self.r.stop()
             self.r.kill()
+            self.particle_filter.tear_down()

@@ -171,7 +171,11 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
     y = start_pose.y
     theta = start_pose.theta
 
+    # if noisy:
+    #     vl, vr = wheel_speeds + np.random.normal(0, .2, 2)
+    # else:
     vl, vr = wheel_speeds
+
     if vl == vr:
         pose = (np.array([x, y, theta]))
         translation = np.array([vl*np.cos(theta) * dt,
@@ -197,7 +201,7 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
         pose = np.dot(rotation_matrix, ICC_vector) + reposition_vector
 
     if noisy:
-        pose = pose + gauss(1, np.pi/16)
+        pose = pose + gauss(scale=1, theta_scale=np.pi/32)
     if type(start_pose) is Particle:
         new_pose = Particle(pose[0], pose[1], pose[2], start_pose.w)
     else:
@@ -205,7 +209,7 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
     return new_pose
 
 def gauss(scale, theta_scale):
-        xy = np.random.normal(0, scale, 2)
-        theta = np.random.normal(0, theta_scale, 1)
-        return np.append(xy, theta)
+    xy = np.random.normal(0, scale, 2)
+    theta = np.random.normal(0, theta_scale, 1)
+    return np.append(xy, theta)
 

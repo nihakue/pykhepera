@@ -4,6 +4,7 @@ import numpy as np
 import utils
 from utils import Point
 from utils import Pose
+from multiprocessing import Process
 import time
 import map
 import odometry
@@ -17,7 +18,7 @@ LOOP = [(560, 293), (916, 293),(1021, 476),
 
 def nav():
     r = Robot()
-    pose = Pose(x=0, y=0, theta=np.pi/2)
+    pose = utils.home_pose
     destination = Point(x=0, y=0)
     destination_x = raw_input('enter destination x')
     destination.x = int(destination_x)
@@ -31,10 +32,29 @@ def nav():
     time.sleep(2)
     r.r.travel(distance)
 
+def wheel_speeds():
+    r = Robot()
+    r.r.turn((5,5))
+    while True:
+        r.update(1)
+        print r.r.read_wheel_speeds()
+
+def update_loop(r, hz):
+    last_time = time.time()
+    while True:
+        dt = last_time - time.time()
+        r.update(dt)
+        time.sleep(1./hz)
+        last_time = time.time()
+
 def lap():
     loop = [Point(x=x1,y=y1) for x1,y1 in LOOP]
-    r = Robot()
-    pose = Pose(x=503, y=484, theta=np.pi/2)
+    r = Robot(plotting=True)
+    pose = utils.home_pose
+    last_time = time.time()
+    p = Process(target=update_loop, args=[r, 2])
+    p.daemon=True
+    p.start()
     for point in loop:
         print point.x, point.y
         print 'pose: %d, %d, %.2f' % (pose.x, pose.y, pose.theta)

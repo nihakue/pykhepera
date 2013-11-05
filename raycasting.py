@@ -27,6 +27,8 @@ def load_arena():
 def to_IR(distance):
     pass
 
+def exp_readings_for_pose_star(argv):
+    return exp_readings_for_pose(*argv)
 
 def exp_readings_for_pose(pose, thresholds, ir_range=80,
                           radius=26.5, plot=False):

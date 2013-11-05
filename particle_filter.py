@@ -3,8 +3,11 @@ from scipy.stats import norm
 from utils import Pose
 from utils import Particle
 import utils
+import time
+from multiprocessing import Pool
 from collections import namedtuple
 import raycasting
+import itertools
 
 
 class ParticleFilter(object):
@@ -18,7 +21,7 @@ class ParticleFilter(object):
         # self.particles = self.random_particles()
         self.particles = self.rand_gaussian_particles(start_pose, n, 1./n)
         self.likliest = self.particles[0]
-        self.least_likely = self.particles[0]
+        self.pool = Pool(processes=2)
 
     def get_x(self):
         return [pose.x for pose in self.particles]
@@ -29,11 +32,11 @@ class ParticleFilter(object):
     def get_theta(self):
         return [pose.theta for pose in self.particles]
 
-    def gauss(self):
-        xy = np.random.normal(0, self.scale, 2)
-        theta = np.random.normal(0, self.theta_scale, 1)
-        weight = (0,)
-        return np.append(xy, [theta, weight])
+    # def gauss(self):
+    #     xy = np.random.normal(0, self.scale, 2)
+    #     theta = np.random.normal(0, self.theta_scale, 1)
+    #     weight = (0,)
+    #     return np.append(xy, [theta, weight])
 
     def weighted_choice(self, choices):
        total = sum(p.w for p in choices)
@@ -46,6 +49,7 @@ class ParticleFilter(object):
        assert False, "Shouldn't get here"
 
     def update(self, dt):
+        t0 = time.time()
         particles = self.sample_particles(len(self.particles))
         #Move sampled particles based on a motor control
         new_particles = [
@@ -53,43 +57,35 @@ class ParticleFilter(object):
             for p in particles
             if p.x < 1469 and p.x > 0
             and p.y < 962 and p.y > 0]
-        self.likliest = new_particles[0] #not likliest yet
-        self.least_likely = new_particles[0] #not least likely yet
-        new_particles.append(self.data.pose)
-        if len(new_particles) < len(self.particles):
-            shortage = len(self.particles) - len(new_particles)
+        # odo_pose = self.data.pose
+        # odo_pose.w = 1./len(new_particles)*10
+        # new_particles.append(odo_pose)
+        if len(new_particles) < self.n:
+            shortage = len(self.particles) - self.n
             new_particles += (self.rand_gaussian_particles(self.likliest,
                                  shortage, self.likliest.w))
         eta = 0
         #Calculate the sensor probabilities (weights) for each particle
-        for p in new_particles:
-            exp_readings = raycasting.exp_readings_for_pose(p, self.data.distance_thresholds)
-            # print 'exp readings', exp_readings
-            # print 'acutal readings', self.data.sensor_values
-            weight = sum(norm.pdf(pr, r, 100)
-                              for pr, r in zip(exp_readings,
-                                            self.data.sensor_values))
+        #Use a pool of workers to utilize multiple cores
+        exp_readings = self.pool.map(raycasting.exp_readings_for_pose_star, itertools.izip(new_particles, itertools.repeat(self.data.distance_thresholds)))
+        if len(exp_readings) != len(new_particles):
+            assert False, "Array of expected readings must have the same size as the array of new particles. exp_readings: %d new_particles: %d" % (len(exp_readings), len(new_particles))
+        #Sum sensor probabilites (assumption is that they are independent)
+        for i, p in enumerate(new_particles):
+            weight = self.probability_sum(4, exp_readings[i])
             eta += weight
             p.w = weight
+
         #Normalize weights
         print 'eta: ', eta
-        if eta > 0:
-            total = 0
-            for p in new_particles:
-                p.w = p.w/eta
-                if p.w > self.likliest.w:
-                    self.likliest = p #now likliest
-                if p.w < self.least_likely.w:
-                    self.least_likely = p
-                total += p.w
-        else:
-            self.particles = self.random_particles()
-            return
+        new_particles = self.normalize(eta, new_particles)
 
-        if len(new_particles) > len(self.particles):
-            new_particles.remove(self.least_likely)
+        while len(new_particles) > len(self.particles):
+            new_particles.remove(self.least_likely(new_particles))
 
         self.particles = new_particles
+        duration = time.time() - t0
+        # print 'update took %.4f seconds' % duration
 
     def sample_particles(self, num):
         return [self.weighted_choice(self.particles)
@@ -103,12 +99,12 @@ class ParticleFilter(object):
         mean_theta = np.mean(thetas)
         return Pose(mean_x, mean_y, mean_theta)
 
-    def random_particles(self):
+    def random_particles(self, quantity):
         tup = ((np.random.uniform(0, 1469),
                np.random.uniform(0,962),
                np.random.uniform(0, 2*np.pi))
-                for i in xrange(self.n))
-        particles = [Particle(x, y, theta, 1./self.n)
+                for i in xrange(quantity))
+        particles = [Particle(x, y, theta, self.least_likely(self.particles).w)
             for (x, y, theta) in tup]
         return particles
 
@@ -119,3 +115,37 @@ class ParticleFilter(object):
         return [Particle(x, y, z, weight) for x, y, z
                             in zip(particles_x, particles_y,
                                    particles_theta)]
+
+    def normalize(self, eta, particles):
+        if eta > 0:
+            for p in particles:
+                p.w = p.w/eta
+                if p.w > self.likliest.w:
+                    self.likliest = p #now likliest
+            return particles
+        else:
+            self.particles = self.random_particles(self.n)
+            return
+
+    def least_likely(self, particles):
+        return min(particles, key=weight_key)
+
+    def most_likely(self, particles=None):
+        if not particles:
+            particles = self.particles
+        return max(particles, key=weight_key)
+
+    def probability_sum(self, scale, exp_reading):
+        prob_sum = sum(norm.pdf(pr, r, 60)
+                              for pr, r in zip(exp_reading,
+                                            self.data.sensor_values))
+        # print 'probability of: %s when reading: %s' % (exp_reading, self.data.sensor_values)
+        # print prob_sum
+        return prob_sum
+
+    def tear_down(self):
+        self.pool.terminate()
+        self.pool.join()
+
+def weight_key(particle):
+    return particle.w
