@@ -5,18 +5,13 @@ We got the travel_to function within 1mm
 point to point algorithm works but with a non-trivial error
 
 
-not used A*. Used a similar algorithm because we already know the value of the distance to the origin from all our map points.
-all our map movements will be from a node to home, or from home to a node (that path is the inverse of node-home)
-Tested the algorithm with tribial test (function navmap in tests)
-
-
-nodes closer than 100mm to any object because of the sensors
 
 each sensor has independent readings (should take it in account for particle filter)
 
 Done an easy food detection function that detects food when all the sensor values are over 100 (seems to work without problems)
 
-for the calibration distances we can assume that the function that transforms a ir reading to a distance is linear between two points (it is exponential)
+for the calibration distances we can assume that the function that transforms a ir reading to a distance is linear between two points (it is exponential) or maybe not, but we didn't do proper line fitting to find out.
+
 CALIBRATION done. Method: take the readings for all the sensors in distances 0 to 10. made a function in utils, that maps a ir reading to a distance in mm. It needs the threshold related to the sensor and the reading.
 
 
@@ -29,67 +24,96 @@ TO DO:
 	Raycasting/simulation for expected ---done
 	detect found food function (done, should improve?) ---Andres
 
+hardware notes:
+	sensor 0 and 5 are not actually pointing at 90 degrees, which causes problems with raycasting because we assume they are at 90.
+
+Nodes/A*:
+	not used A*. Used a similar algorithm because we already know the value of the distance to the origin from all our map points.
+	all our map movements will be from a node to home, or from home to a node (that path is the inverse of node-home)
+	Tested the algorithm with tribial test (function navmap in tests)
+
+	nodes closer than 100mm to any object because of the sensors
+
+	Should have a dense enough distribution of nodes that we can reach at least one node in the graph from any point on the arena
+
 particle filter notes:
 	
 	start with a broad normal distribution to avoid a false sense of accuracy
 	The error on our estimated range function is somewhere around 10 :(
+	If we do more than 100 particles, the object avoidance stops working. This is because raycasting is not fast enough, even though it is running in parallel.\
+
+	other problem is calibration STRONGLY affects the probability distribution. If we have bad calibration data, we will always be wrong.
+
+	particle selection for current pose: uses the highest weighted particle, should probably use the mean particle of the highest weighted cluster of particles within some radius (that would be detirmined by experiment)
+
+raycasting notes:
+	inneficient and expensive, greatest gains co
+
+	*We need experimental data on accuracy for number of particles/accuracy of raycasting, also look at computation time for each*
 
 TIMING MULTITHREADING:
 
 	In [13]: %%timeit
    ....: result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
    ....: 
-10 loops, best of 3: 96.1 ms per loop
+	10 loops, best of 3: 96.1 ms per loop
 
-In [14]: %%timeit result = [rayc
-raycasting        raycasting.ipynb  raycasting.py     raycasting.pyc    
+	In [14]: %%timeit result = [rayc
+	raycasting        raycasting.ipynb  raycasting.py     raycasting.pyc    
 
-In [14]: %%timeit result = [raycasting.exp_readings_f
-raycasting.exp_readings_for_pose       raycasting.exp_readings_for_pose_star  
+	In [14]: %%timeit result = [raycasting.exp_readings_f
+	raycasting.exp_readings_for_pose       raycasting.exp_readings_for_pose_star  
 
-In [14]: %%timeit result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
-   ....: 
-UsageError: %%timeit is a cell magic, but the cell body is empty. Did you mean the line magic %timeit (single %)?
-In [15]: %%timeit
-   ....: result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]   ....: 
-10 loops, best of 3: 178 ms per loop
+	In [14]: %%timeit result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
+	   ....: 
+	UsageError: %%timeit is a cell magic, but the cell body is empty. Did you mean the line magic %timeit (single %)?
+	In [15]: %%timeit
+	   ....: result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]   ....: 
+	10 loops, best of 3: 178 ms per loop
 
-In [16]: r = robot.Robot(plotting=True, num_particles=100)
+	In [16]: r = robot.Robot(plotting=True, num_particles=100)
 
-In [17]: %%timeit                                                                                                             result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
-   ....: 
-10 loops, best of 3: 190 ms per loop
+	In [17]: %%timeit                                                                                                             result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
+	   ....: 
+	10 loops, best of 3: 190 ms per loop
 
-In [18]: %%timeit                                                                                                             result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
-   ....: 
-1 loops, best of 3: 357 ms per loop
+	In [18]: %%timeit                                                                                                             result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
+	   ....: 
+	1 loops, best of 3: 357 ms per loop
 
-In [19]: p = Pool(2)
+	In [19]: p = Pool(2)
 
-In [20]: %%timeit
-result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
-   ....: 
-10 loops, best of 3: 186 ms per loop
+	In [20]: %%timeit
+	result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
+	   ....: 
+	10 loops, best of 3: 186 ms per loop
 
-In [21]: %%timeit
-result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]   ....: 
-1 loops, best of 3: 356 ms per loop
+	In [21]: %%timeit
+	result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]   ....: 
+	1 loops, best of 3: 356 ms per loop
 
-In [22]: r = robot.Robot(plotting=True, num_particles=500)
+	In [22]: r = robot.Robot(plotting=True, num_particles=500)
 
-In [23]: %%timeit                                         
-result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
-   ....: 
-1 loops, best of 3: 905 ms per loop
+	In [23]: %%timeit                                         
+	result = p.map(raycasting.exp_readings_for_pose_star, itertools.izip(r.particle_filter.particles, itertools.repeat(r.data.distance_thresholds)))
+	   ....: 
+	1 loops, best of 3: 905 ms per loop
 
-In [24]: %%timeit                                         
-result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
-   ....: 
-1 loops, best of 3: 1.78 s per loop
+	In [24]: %%timeit                                         
+	result = [raycasting.exp_readings_for_pose(p, r.data.distance_thresholds) for p in r.particle_filter.particles]
+	   ....: 
+	1 loops, best of 3: 1.78 s per loop
 
-END TIMING MULTITHREADING
 
 update function was taking .25 seconds and .50 seconds for 20 and 50 particles
 
 with thread pool 50 takes .16 seconds on average, and 100 particles takes .33 seconds
 
+Odometry:
+	Odometry works well with particle filter, but is limited to very low level motor commands (i.e. speed of each wheel). Can be fixed by changing odometry to work with wheel encoders OR ask the robot for wheel speeds.
+		problem with asking for wheel speeds: very noisy data!!
+
+EXPERIMENTS:
+	-Travel the loop
+	-Particle accuracy vs number of particles also computation time
+	-

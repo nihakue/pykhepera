@@ -32,12 +32,6 @@ class ParticleFilter(object):
     def get_theta(self):
         return [pose.theta for pose in self.particles]
 
-    # def gauss(self):
-    #     xy = np.random.normal(0, self.scale, 2)
-    #     theta = np.random.normal(0, self.theta_scale, 1)
-    #     weight = (0,)
-    #     return np.append(xy, [theta, weight])
-
     def weighted_choice(self, choices):
        total = sum(p.w for p in choices)
        r = np.random.uniform(0, total)
@@ -61,9 +55,10 @@ class ParticleFilter(object):
         # odo_pose.w = 1./len(new_particles)*10
         # new_particles.append(odo_pose)
         if len(new_particles) < self.n:
-            shortage = len(self.particles) - self.n
-            new_particles += (self.rand_gaussian_particles(self.likliest,
-                                 shortage, self.likliest.w))
+            shortage = self.n - len(new_particles)
+            likliest_particle = self.most_likely()
+            new_particles += (self.rand_gaussian_particles(likliest_particle,
+                                 shortage, likliest_particle.w))
         eta = 0
         #Calculate the sensor probabilities (weights) for each particle
         #Use a pool of workers to utilize multiple cores

@@ -51,7 +51,7 @@ class Robot(object):
     def update_data(self):
         self.data.sensor_values = self.r.read_sensor_values()
         wheel_speeds = self.r.read_wheel_speeds()
-        self.data.wheel_speeds = self.speed_command
+        self.data.wheel_speeds = wheel_speeds
         self.data.wheel_values = self.r.read_wheel_values()
 
     def calibrate_min(self):

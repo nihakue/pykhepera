@@ -79,7 +79,7 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
             else:
                 offset += np.deg2rad(-bow_stern_offset)
 
-        r = np.linspace(0, ir_range, 10)
+        r = np.linspace(0, ir_range, 100)
         x_offset = radius*np.cos(offset)
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
