@@ -1,4 +1,5 @@
 import numpy as np
+import utils
 
 class Behavior(object):
     """Abstract class for behaivors"""
@@ -17,7 +18,6 @@ class ObjAvoid(Behavior):
             print 'no values available'
             return
         vals = self.data.sensor_values
-        print 'vals: ', vals
         max_ir_reading = self.data.thresholds['max_ir_reading']
         vl = 5
         vr = 5
@@ -110,24 +110,17 @@ class GoHome(Behavior):
 
     def step(self):
         theta = self.data.theta
-        home_angle = self.get_home_angle()
-        rotation = self.get_rotation(home_angle - theta)
-        return rotation
+        home_vector = self.get_home_vector()
+        theta_vector = np.array([np.cos(theta), np.sin(theta)])
+        home_angle = utils.angle_between(home_vector, theta_vector)
+        test_vector = utils.rotated_vector(theta_vector, home_angle)
 
-    def get_home_angle(self):
+        if not utils.codirectional(home_vector, test_vector):
+            home_angle = -home_angle
+
+        return {'rotation': home_angle}
+
+    def get_home_vector(self):
         x = self.data.x_positions[-1]
-        y = self.data.x_positions[-1]
-        home_angle = np.arctan(y/x)
-        if x > 0:
-            home_angle = np.pi - home_angle
-        if y > 0:
-            home_angle = 2*np.pi -home_angle
-        return home_angle
-
-    def get_rotation(self, radians):
-        radian = 2078/(2 * np.pi)
-        left_wheel = int(radians * radian + self.data.wheel_values[0])
-        right_wheel = int(-radians * radian + self.data.wheel_values[1])
-        return left_wheel, right_wheel
-
-
+        y = self.data.y_positions[-1]
+        return np.array([-x, -y])
