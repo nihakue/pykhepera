@@ -46,6 +46,23 @@ particle filter notes:
 
 	particle selection for current pose: uses the highest weighted particle, should probably use the mean particle of the highest weighted cluster of particles within some radius (that would be detirmined by experiment)
 
+	Attempts to serialize raycasting data:
+		100 entries takes 62.9 seconds using a single core
+
+		list creation alone takes 7.8 seconds for 3200 entries
+		(that's 30 hours to create all the list items...)
+		20 minutes if I went down to centimeter precision...
+		If I use tuples instead, 3200 takes 1 second.
+		for all 45221696 possible poses that's still 3 hrs to generate the list.
+		32   1.4  seconds (everything at once)
+		128  2.5  seconds (everything at once)
+		288  4    seconds (everything at once)
+		512  6.5  seconds (everything at once)
+		3200 34.9 seconds (everything at once)
+
+		at this rate, 138 hrs for everything if mm :(
+		only 1 hour if cm I guess that settles it.
+
 raycasting notes:
 	inneficient and expensive, greatest gains co
 

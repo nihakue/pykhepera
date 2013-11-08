@@ -32,9 +32,15 @@ class Particle(Pose):
         self.w = w
 
     def __eq__(self, other):
+        if type(other) is tuple:
+            print 'yeah'
+            return (self.x, self.y, self.theta) == other
         return (self.x == other.x
         and self.y == other.y
         and self.w == other.w)
+
+    def __repr__(self):
+        return 'x: %s | y: %s | theta: %s' % (self.x, self.y, self.theta)
 
 class Point(object):
     """This is a point in the x y plane"""
@@ -49,6 +55,14 @@ class Point(object):
 home_position = Point(x=503, y=484)
 home_pose = Pose(x=503, y=484, theta=0)
 axel_l = 53.0
+
+
+def pirange(start=0, stop=2*np.pi, step=np.pi/16):
+    r = start
+    while r <= stop:
+        yield r
+        r += step
+
 
 def to_mm(wheel_value):
         return float(wheel_value * 0.08)

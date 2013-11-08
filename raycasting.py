@@ -18,9 +18,13 @@ __lidar = OrderedDict(
              ('port_stern', np.pi)])
 
 
-def load_arena():
+def load_arena(res):
     global __arena
     if not __arena.any():
+        if res is 'mm':
+            arena = 'arena.bmp'
+        elif res is 'cm':
+            arena = 'arena_cm.bmp'
         __arena = np.flipud(misc.imread('arena.bmp')).T
 
 
@@ -31,7 +35,7 @@ def exp_readings_for_pose_star(argv):
     return exp_readings_for_pose(*argv)
 
 def exp_readings_for_pose(pose, thresholds, ir_range=80,
-                          radius=26.5, plot=False):
+                          radius=26.5, plot=False, res='mm'):
     if type(thresholds) is list:
         thresholds_s = thresholds
     else:
@@ -39,13 +43,13 @@ def exp_readings_for_pose(pose, thresholds, ir_range=80,
         sorted_keys.sort()
         thresholds_s = [thresholds[key] for key in sorted_keys
                        if 'sensor' in key]
-    exp_ds = exp_distances_for_pose(pose, ir_range, radius, plot)
+    exp_ds = exp_distances_for_pose(pose, ir_range, radius, plot, res)
     readings = [utils.estimated_reading(d, t)
                 for d, t in zip(exp_ds, thresholds_s)]
     return readings
 
 
-def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
+def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm'):
     '''accepts a pose containing x, y, and phi(heading),
     uses raycasting to determine the nearest obstacles, and returns
     the distance to those obstacles.
@@ -53,13 +57,18 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
     global __arena
     global __lidar
 
-    load_arena()
+    load_arena(res)
     if plot:
         plt.ion()
         plt.imshow(__arena, origin='lower')
         plt.xlim(-5, np.size(__arena, axis=1))
         plt.ylim(-5, np.size(__arena, axis=0))
 
+    if type(pose) is tuple:
+        Pose = namedtuple('Pose', 'x, y, theta')
+        pose = Pose(pose[0], pose[1], pose[2])
+
+    #TODO: Set this to the max threshold value
     lidar_range = [40, 40, 40, 40, 40, 40, 40, 40]
     i = 0
     dist = 999
@@ -79,7 +88,7 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
             else:
                 offset += np.deg2rad(-bow_stern_offset)
 
-        r = np.linspace(0, ir_range, 100)
+        r = np.linspace(0, ir_range, ir_range/10)
         x_offset = radius*np.cos(offset)
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
@@ -124,5 +133,33 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
     return lidar_range
 
 
+def generate_table():
+    import data
+    import pickle
+    from itertools import product
+    from itertools import izip
+    from itertools import repeat
+    from multiprocessing import Pool
+    from collections import namedtuple
+    d = data.Data()
+    d.load_calibration()
+    p = Pool(processes=4)
+    print 'creating a big ass table of data...'
+    possible_poses = [(x, y, theta) for (x, y, theta) in product(xrange(4), xrange(4), utils.pirange())]
+    print 'created a table with: %d entries' % len(possible_poses)
+    print 'calculating a bunch of reading values...'
+    exp_readings = p.map(
+                         exp_readings_for_pose_star,
+                         izip(possible_poses,
+                         repeat(d.distance_thresholds)))
+    # table = dict((utils.Pose(x, y, z), exp_readings_for_pose(utils.Pose(x, y, z), d.distance_thresholds))
+    #              for (x, y, z) in product(range(10), range(10), utils.pirange()))
+    table = dict(izip(possible_poses, exp_readings))
+    with open('raycasting_table.data', 'w') as raycasting_table:
+        data = pickle.dumps(table)
+        raycasting_table.write(data)
+
+
 if __name__ == '__main__':
-    load_arena()
+    generate_table()
+
