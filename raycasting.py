@@ -123,5 +123,6 @@ def exp_distances_for_pose(pose, ir_range=80, radius=26.5, plot=False):
         i += 1
     return lidar_range
 
+
 if __name__ == '__main__':
     load_arena()

@@ -13,6 +13,17 @@ class Pose(object):
     def arr(self):
         return np.array([self.x, self.y, self.theta])
 
+    def rtnearest(self, val, nearest=np.pi/16):
+        return round(val/nearest) * nearest
+
+    def __hash__(self):
+        '''To keep the size of the array maneageable, we round theta on hashing'''
+        rd = self.rtnearest(self.theta, nearest=np.pi/16)
+        return hash((self.x, self.y, rd))
+
+    def __eq__(self, other):
+        return (self.x, self.y, self.theta) == (other.x, other.y, other.theta)
+
 
 class Particle(Pose):
     """just a pose with a weight"""
