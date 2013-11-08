@@ -18,7 +18,7 @@ __lidar = OrderedDict(
              ('port_stern', np.pi)])
 
 
-def load_arena(res):
+def load_arena(res='mm'):
     global __arena
     if not __arena.any():
         if res is 'mm':
@@ -28,6 +28,14 @@ def load_arena(res):
         __arena = np.flipud(misc.imread(arena)).T
 
 
+def get_arena(res):
+    if res is 'mm':
+        arena = 'arena.bmp'
+    elif res is 'cm':
+        arena = 'arena_cm.bmp'
+    return np.flipud(misc.imread(arena)).T
+
+
 def to_IR(distance):
     pass
 
@@ -35,7 +43,7 @@ def exp_readings_for_pose_star(argv):
     return exp_readings_for_pose(*argv)
 
 def exp_readings_for_pose(pose, thresholds, ir_range=80,
-                          radius=26.5, plot=False, res='mm'):
+                          radius=26.5, plot=False, res='cm'):
     if type(thresholds) is list:
         thresholds_s = thresholds
     else:
@@ -49,15 +57,18 @@ def exp_readings_for_pose(pose, thresholds, ir_range=80,
     return readings
 
 
-def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm'):
+def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='cm'):
     '''accepts a pose containing x, y, and phi(heading),
     uses raycasting to determine the nearest obstacles, and returns
     the distance to those obstacles.
     optional lidar ir_range and robot radius'''
-    global __arena
     global __lidar
+    if res is 'cm':
+        ir_range = ir_range/10
+        radius = radius/10
 
-    load_arena(res)
+    arena = get_arena(res)
+
     if plot:
         plt.ion()
         plt.imshow(__arena, origin='lower')
@@ -76,6 +87,8 @@ def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm')
         phi = pose.theta + theta
         offset = phi
         bow_stern_offset = 14.5
+        if res is 'cm':
+            bow_stern_offset = bow_stern_offset/10
 
         if 'bow' in laser:
             if 'stbd' in laser:
@@ -88,7 +101,7 @@ def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm')
             else:
                 offset += np.deg2rad(-bow_stern_offset)
 
-        r = np.linspace(0, ir_range, ir_range/10)
+        r = np.linspace(0, ir_range, ir_range)
         x_offset = radius*np.cos(offset)
         y_offset = radius*np.sin(offset)
         x = pose.x + x_offset + (r*np.cos(phi))
@@ -97,8 +110,8 @@ def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm')
         temp = []
         it = np.nditer(x, flags=['f_index'])
         while not it.finished:
-            if (x[it.index] > np.size(__arena, axis=0)
-                or y[it.index] > np.size(__arena, axis=1)
+            if (x[it.index] > np.size(arena, axis=0)
+                or y[it.index] > np.size(arena, axis=1)
                 or x[it.index] <= 0 or y[it.index] <= 0):
                 temp.append(it.index)
             it.iternext()
@@ -112,10 +125,10 @@ def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='mm')
         #Correcting zero map indexing
         xint2 = [1 if a==0 else a for a in xint]
         yint2 = [1 if b==0 else b for b in yint]
-        b = [__arena[xint2[j],yint2[j]]
+        b = [arena[xint2[j],yint2[j]]
             for j in xrange(len(xint2))
-            if xint2[j] < __arena.shape[0]
-            and yint2[j] < __arena.shape[1]]
+            if xint2[j] < arena.shape[0]
+            and yint2[j] < arena.shape[1]]
         indices = m_find(np.ravel(b) == 1)
         if indices.any():
             xb = x[indices[0]]
@@ -141,14 +154,14 @@ def generate_table():
     from itertools import repeat
     from multiprocessing import Pool
     from collections import namedtuple
-    load_arena('cm')
+    arena = get_arena('cm')
     d = data.Data()
     d.load_calibration()
     p = Pool(processes=4)
     print 'creating a big ass table of data...'
     possible_poses = [(x, y, theta)
-                        for (x, y, theta) in product(xrange(__arena.shape[0]),
-                                                     xrange(__arena.shape[1]),
+                        for (x, y, theta) in product(xrange(1),
+                                                     xrange(1),
                                                      utils.pirange())]
     print 'created a table with: %d entries' % len(possible_poses)
     print 'calculating a bunch of reading values...'
