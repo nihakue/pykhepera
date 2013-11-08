@@ -43,7 +43,7 @@ def exp_readings_for_pose_star(argv):
     return exp_readings_for_pose(*argv)
 
 def exp_readings_for_pose(pose, thresholds, ir_range=80,
-                          radius=26.5, plot=False, res='cm'):
+                          radius=27.5, plot=False, res='cm'):
     if type(thresholds) is list:
         thresholds_s = thresholds
     else:
@@ -57,7 +57,7 @@ def exp_readings_for_pose(pose, thresholds, ir_range=80,
     return readings
 
 
-def exp_distances_for_pose(pose, ir_range=60, radius=26.5, plot=False, res='cm'):
+def exp_distances_for_pose(pose, ir_range=61, radius=26.5, plot=False, res='cm'):
     '''accepts a pose containing x, y, and phi(heading),
     uses raycasting to determine the nearest obstacles, and returns
     the distance to those obstacles.
@@ -157,11 +157,11 @@ def generate_table():
     arena = get_arena('cm')
     d = data.Data()
     d.load_calibration()
-    p = Pool(processes=4)
+    p = Pool(processes=16)
     print 'creating a big ass table of data...'
-    possible_poses = [(x, y, theta)
-                        for (x, y, theta) in product(xrange(1),
-                                                     xrange(1),
+    possible_poses = [utils.Pose(x, y, theta)
+                        for (x, y, theta) in product(xrange(arena.shape[0]),
+                                                     xrange(arena.shape[1]),
                                                      utils.pirange())]
     print 'created a table with: %d entries' % len(possible_poses)
     print 'calculating a bunch of reading values...'
@@ -172,9 +172,9 @@ def generate_table():
     # table = dict((utils.Pose(x, y, z), exp_readings_for_pose(utils.Pose(x, y, z), d.distance_thresholds))
     #              for (x, y, z) in product(range(10), range(10), utils.pirange()))
     table = dict(izip(possible_poses, exp_readings))
-    with open('raycasting_table.data', 'w') as raycasting_table:
-        data = pickle.dumps(table)
-        raycasting_table.write(data)
+    with open('raycasting_table_bin.data', 'w') as raycasting_table:
+	pickler = pickle.Pickler(raycasting_table, protocol=-1)
+	pickler.dump(table)
 
 
 if __name__ == '__main__':
