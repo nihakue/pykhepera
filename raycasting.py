@@ -25,7 +25,7 @@ def load_arena(res):
             arena = 'arena.bmp'
         elif res is 'cm':
             arena = 'arena_cm.bmp'
-        __arena = np.flipud(misc.imread('arena.bmp')).T
+        __arena = np.flipud(misc.imread(arena)).T
 
 
 def to_IR(distance):
@@ -141,11 +141,15 @@ def generate_table():
     from itertools import repeat
     from multiprocessing import Pool
     from collections import namedtuple
+    load_arena('cm')
     d = data.Data()
     d.load_calibration()
     p = Pool(processes=4)
     print 'creating a big ass table of data...'
-    possible_poses = [(x, y, theta) for (x, y, theta) in product(xrange(4), xrange(4), utils.pirange())]
+    possible_poses = [(x, y, theta)
+                        for (x, y, theta) in product(xrange(__arena.shape[0]),
+                                                     xrange(__arena.shape[1]),
+                                                     utils.pirange())]
     print 'created a table with: %d entries' % len(possible_poses)
     print 'calculating a bunch of reading values...'
     exp_readings = p.map(
