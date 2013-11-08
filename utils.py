@@ -22,6 +22,8 @@ class Pose(object):
         return hash((self.x, self.y, rd))
 
     def __eq__(self, other):
+        if type(other) is tuple:
+            return (self.x, self.y, self.theta) == (other[0], other[1], other[2])
         return (self.x, self.y, self.theta) == (other.x, other.y, other.theta)
 
 
