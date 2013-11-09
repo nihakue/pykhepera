@@ -24,7 +24,8 @@ class Pose(object):
     def __eq__(self, other):
         if type(other) is tuple:
             return (self.x, self.y, self.theta) == (other[0], other[1], other[2])
-        return (self.x, self.y, self.theta) == (other.x, other.y, other.theta)
+        return ((self.x, self.y, self.theta) == (other.x, other.y, other.theta)
+            or (self.x/10, self.y/10, self.rtnearest(self.theta)) == (other.x, other.y, other.theta))
 
 
 class Particle(Pose):
@@ -33,16 +34,6 @@ class Particle(Pose):
         super(Particle, self).__init__(x, y, theta)
         self.w = w
 
-    def __eq__(self, other):
-        if type(other) is tuple:
-            print 'yeah'
-            return (self.x, self.y, self.theta) == other
-        return (self.x == other.x
-        and self.y == other.y
-        and self.w == other.w)
-
-    def __repr__(self):
-        return 'x: %s | y: %s | theta: %s' % (self.x, self.y, self.theta)
 
 class Point(object):
     """This is a point in the x y plane"""

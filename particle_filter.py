@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from collections import namedtuple
 import raycasting
 import itertools
+import pickle
 
 
 class ParticleFilter(object):
@@ -21,7 +22,9 @@ class ParticleFilter(object):
         # self.particles = self.random_particles()
         self.particles = self.rand_gaussian_particles(start_pose, n, 1./n)
         self.likliest = self.particles[0]
-        self.pool = Pool(processes=2)
+        with open('raycasting_table_bin.data', 'rb') as td:
+            print 'loading giant sensor table...'
+            self.table_data = pickle.loads(td.read())
 
     def get_x(self):
         return [pose.x for pose in self.particles]
@@ -62,12 +65,14 @@ class ParticleFilter(object):
         eta = 0
         #Calculate the sensor probabilities (weights) for each particle
         #Use a pool of workers to utilize multiple cores
-        exp_readings = self.pool.map(raycasting.exp_readings_for_pose_star, itertools.izip(new_particles, itertools.repeat(self.data.distance_thresholds)))
-        if len(exp_readings) != len(new_particles):
-            assert False, "Array of expected readings must have the same size as the array of new particles. exp_readings: %d new_particles: %d" % (len(exp_readings), len(new_particles))
+        # exp_readings = self.pool.map(raycasting.exp_readings_for_pose_star, itertools.izip(new_particles, itertools.repeat(self.data.distance_thresholds)))
+        # if len(exp_readings) != len(new_particles):
+        #     assert False, "Array of expected readings must have the same size as the array of new particles. exp_readings: %d new_particles: %d" % (len(exp_readings), len(new_particles))
+
         #Sum sensor probabilites (assumption is that they are independent)
-        for i, p in enumerate(new_particles):
-            weight = self.probability_sum(4, exp_readings[i])
+        for p in new_particles:
+            print p
+            weight = self.probability_sum(4, self.table_data[p])
             eta += weight
             p.w = weight
 
