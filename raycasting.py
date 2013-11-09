@@ -159,7 +159,7 @@ def generate_table():
     d.load_calibration()
     p = Pool(processes=16)
     print 'creating a big ass table of data...'
-    possible_poses = [utils.Pose(x, y, theta)
+    possible_poses = [(x, y, theta)
                         for (x, y, theta) in product(xrange(arena.shape[0]),
                                                      xrange(arena.shape[1]),
                                                      utils.pirange())]
@@ -172,9 +172,11 @@ def generate_table():
     # table = dict((utils.Pose(x, y, z), exp_readings_for_pose(utils.Pose(x, y, z), d.distance_thresholds))
     #              for (x, y, z) in product(range(10), range(10), utils.pirange()))
     table = dict(izip(possible_poses, exp_readings))
-    with open('raycasting_table_bin.data', 'w') as raycasting_table:
+    print 'pickling...'
+    with open('raycasting_table_bin.data', 'wb') as raycasting_table:
 	pickler = pickle.Pickler(raycasting_table, protocol=-1)
 	pickler.dump(table)
+    print 'done.'
 
 
 if __name__ == '__main__':

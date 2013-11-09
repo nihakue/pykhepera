@@ -19,7 +19,7 @@ class Robot(object):
         self.carrying = 0
         self.data = Data()
         self.plotting = plotting
-        # self.r = pykhepera.PyKhepera()
+        self.r = pykhepera.PyKhepera()
         self.axel_l = 53.0  # self.axis length in mm
         self.data.clear()
         self.data.pose = utils.Particle(utils.home_pose.x,

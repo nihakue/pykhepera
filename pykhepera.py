@@ -16,7 +16,7 @@ class PyKhepera():
     }
 
 
-    def __init__(self, port='/dev/ttyS0', baud=9600, timeout=.05):
+    def __init__(self, port='/dev/ttyS0', baud=19200, timeout=.01):
         self.timeout = timeout
         self.port = port
         self.baud = baud
@@ -28,11 +28,7 @@ class PyKhepera():
         self.diameter = 53 #milimeters
 
     def purge_buffer(self, verbose=False):
-        response = self.ser.readline()
-        while response:
-            if verbose:
-                print response
-            response = self.ser.readline()
+        self.ser.readall()
 
     def kill(self):
         self.ser.close()

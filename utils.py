@@ -14,16 +14,17 @@ class Pose(object):
         return np.array([self.x, self.y, self.theta])
 
     def rtnearest(self, val, nearest=np.pi/16):
-        return round(val/nearest) * nearest
+        val = round(val/nearest) * nearest
+        return round(val, 1)
 
     def __hash__(self):
         '''To keep the size of the array maneageable, we round theta on hashing'''
         rd = self.rtnearest(self.theta, nearest=np.pi/16)
-        return hash((self.x, self.y, rd))
+        return hash((int(self.x/10), int(self.y/10), rd))
 
     def __eq__(self, other):
         if type(other) is tuple:
-            return (self.x, self.y, self.theta) == (other[0], other[1], other[2])
+            return (int(self.x/10), int(self.y/10), self.rtnearest(self.theta)) == (other[0], other[1], other[2])
         return ((self.x, self.y, self.theta) == (other.x, other.y, other.theta)
             or (self.x/10, self.y/10, self.rtnearest(self.theta)) == (other.x, other.y, other.theta))
 
@@ -52,8 +53,8 @@ axel_l = 53.0
 
 def pirange(start=0, stop=2*np.pi, step=np.pi/16):
     r = start
-    while r <= stop:
-        yield r
+    while r <= stop+np.pi/32:
+        yield round(r, 1)
         r += step
 
 
@@ -224,6 +225,10 @@ def update_pose(start_pose, wheel_speeds, dt, noisy=False):
         new_pose = Particle(pose[0], pose[1], pose[2], start_pose.w)
     else:
         new_pose = Pose(pose[0], pose[1], pose[2])
+    if new_pose.theta < 0:
+        new_pose.theta = 2*np.pi + new_pose.theta
+    if new_pose.theta > (2 * np.pi):
+        new_pose.theta = new_pose.theta % (2 * np.pi)
     return new_pose
 
 def gauss(scale, theta_scale):

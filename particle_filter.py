@@ -13,7 +13,7 @@ import pickle
 
 class ParticleFilter(object):
     """PARTICLE FILTER YAY"""
-    def __init__(self, n, start_pose, data, scale=1, theta_scale=np.pi/16):
+    def __init__(self, n, start_pose, data, scale=1, theta_scale=np.pi/16, testing=False):
         self.n = n
         self.data = data
         self.start_pose = start_pose
@@ -22,8 +22,12 @@ class ParticleFilter(object):
         # self.particles = self.random_particles()
         self.particles = self.rand_gaussian_particles(start_pose, n, 1./n)
         self.likliest = self.particles[0]
-        with open('raycasting_table_bin.data', 'rb') as td:
-            print 'loading giant sensor table...'
+        if testing:
+            filename = 'raycasting_table_bin_testing.data'
+        else:
+            filename = 'raycasting_table_bin.data'
+        with open(filename, 'rb') as td:
+            print 'loading giant sensor table into memory...'
             self.table_data = pickle.loads(td.read())
 
     def get_x(self):
@@ -71,7 +75,6 @@ class ParticleFilter(object):
 
         #Sum sensor probabilites (assumption is that they are independent)
         for p in new_particles:
-            print p
             weight = self.probability_sum(4, self.table_data[p])
             eta += weight
             p.w = weight
@@ -85,7 +88,7 @@ class ParticleFilter(object):
 
         self.particles = new_particles
         duration = time.time() - t0
-        # print 'update took %.4f seconds' % duration
+        print 'update took %.4f seconds' % duration
 
     def sample_particles(self, num):
         return [self.weighted_choice(self.particles)
