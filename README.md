@@ -1,24 +1,29 @@
 #pykhepera
 =========
 
-This is the python code for our Khepera robot. It's rad. 
-
-##Usage
----------
-Things are a bit of a mess right now. We're doing some refactoring, so there isn't a sure fired way to start things up.
+This is the python code for our Khepera robot. With it, we can do condensation filter localization, pathfinding, and object avoidance. Code was written during the 2013 Intelligent Autonomous Robotics course at Edinburgh University. Everything is protected by the MIT License. 
 
 
-##Commands
----------
-###set_speed(speed)
-sets the speed
-###stop()
-sets the speed to zero
-###get_values(command)
-sends the command to the robot, returns a list of the values
-valid commands: 
-+N: Proximity readings
-+H: Counter Positions
-+A: Read A/D value
-+O: Ambient Light
+###Licensing
 
+The MIT License (MIT)
+
+Copyright (c) <2013> <Gabriel West>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
